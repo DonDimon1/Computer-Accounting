@@ -1,0 +1,25 @@
+dxdiag
+msinfo32
+https://www.cyberforum.ru/delphi-beginners/thread1360938.html
+https://forum.infostart.ru/forum9/topic119582/
+https://www.cyberforum.ru/cpp-beginners/thread447085.html
+Функции сведений о системе: https://learn.microsoft.com/ru-ru/windows/win32/sysinfo/system-information-functions?redirectedfrom=MSDN
+https://en.wikipedia.org/wiki/CPUID#CPUID_usage_from_high-level_languages
+
+
+Гит хаб типа: https://github.com/sondernextdoor/WindowsHardwareInfo/tree/main
+Вот откуда можно парсить: В гугл SMBIOS parser in c++, или: https://github.com/brunexgeek/smbios-parser/blob/master/smbios.hh#L193
+https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getsystemfirmwaretable
+	
+Короче на сколько я понял таблица SMBIOS состоит из байтов. Считывание происходит по средством считывания этих байтов. То есть в определённом месте данные про определённую
+железку. Я пока не знаю соответсвтие байтов и инфы. https://codeby.net/threads/getsystemfirmwaretable-chtenie-i-razbor-tablicy-smbios.76414/
+Крутая книжка по SMBIOS спецификация: https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.2.0.pdf
+		Вот все версии: https://www.dmtf.org/standards/smbios/
+
+Жёсткий диск: https://stackoverflow.com/questions/24049367/how-do-i-get-the-disk-drive-serial-number-in-c-c
+https://stackoverflow.com/questions/327718/how-to-list-physical-disks
+
+WMI на QT: https://ru.stackoverflow.com/questions/611374/%D0%9F%D1%80%D0%B8%D0%BC%D0%B5%D1%80-%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%8B-%D1%81-wmi-%D0%B8%D0%B7-%D0%BF%D0%BE%D0%B4-qt5
+powershell в с++: https://stackoverflow.com/questions/43678273/how-to-call-a-powershell-script-from-a-c-code
+
+Удалённо: https://learn.microsoft.com/ru-ru/windows/win32/wmisdk/example--getting-wmi-data-from-a-remote-computer?redirectedfrom=MSDN

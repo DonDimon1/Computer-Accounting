@@ -1,0 +1,258 @@
+#include "mainWindow.h"
+#include "./ui_mainWindow.h"
+//#include "compInfo.h"
+#include <windows.h> // winAPI
+
+#include <QStandardItemModel> //Для модели
+//#pragma comment(lib, "dxgi.lib")
+
+MainWindow::MainWindow(QWidget *parent) //Конструктор
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    this->showMaximized(); //Начальное окно на весь экран
+
+    // Подключение к БД
+    db = QSqlDatabase::addDatabase("QMYSQL", "mydb"); //Создания объекта соединения
+    //db.setDatabaseName("./testDB.db");
+    db.setHostName("localhost");//127.0.0.1
+    db.setDatabaseName("ComputerAccounting");
+    db.setUserName("root");
+    db.setPassword("EAZzae1234");
+    //db.setConnectOptions("MYSQL_OPT_RECONNECT=true;CHARSET=utf8mb4");
+    if(!db.open()) //Проверка подключения к БД
+        qDebug() << "Не удалось подключиться к БД: " << db.databaseName();
+
+    // Для QSqlTableModel
+    query = new QSqlQuery(db);             // Инициализация запроса
+    if(!MainWindow::creationTablesDB()) {   // Создаём все нужные таблицы в базе данных
+        return;}
+
+    // Запрос
+    if(!query->exec("SELECT * FROM MainTab"))
+        qDebug() << "Не удалось подключиться к таблице: MainTab";
+
+    model = new QSqlTableModel(this, db); // Инициализация модель
+    model->setTable("MainTab"); // Устанавливает таблицу базы данных, с которой работает модель.
+    model->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
+
+    ui->tableViewMainTab->setEditTriggers(QAbstractItemView::NoEditTriggers); // Запрещаем пользователю редактировать таблицу tableViewMainTab
+    ui->tableViewMainTab->setModel(model); // Добавляем представлению таблицы нашу модель (помещаем модель в таблицу).
+    query->clear(); // Очищаем запрос
+
+    //Узнаём крайний использованный id. Создаём запрос с сортировкой по ключу в обратном порядке и ограничиваем на 1у запись
+    query->prepare("SELECT ID FROM MainTab ORDER BY ID DESC LIMIT 1"); // Подготавливаем запрос
+    if(!query->exec())
+        qDebug() << "Ошибка в запросе последнего ID";
+    if(query->next())// Если есть результат запроса
+        computerCount = query->value(0).toUInt(); // Извлекаем значение последнего ключа из запроса
+    query->clear(); // Очищаем запрос
+
+
+    //####################//
+    // compInfo comp; //Объект класса compInfo
+    // qDebug() << "Запущена Windows:" << comp.GetOsVersionName(); //Инфа о версии ОС
+    // qDebug() << "Имя компьютера:" << comp.GetComputerName_(); //Получить имя компа
+    // qDebug() << "Имя пользователя:" << comp.GetUserName_(); //Получить имя пользователя
+    // qDebug() << "Разрядность ОС:" << comp.GetOsBitWidth(); //Получить разрядность ОС
+
+    // //Процессор
+    // qDebug() << "Имя процессора:" << comp.GetCPUName();
+    // qDebug() << "Архитектура процессора:" << comp.GetCPUType();
+    // qDebug() << "Частота процессора:" << comp.GetCPUFrequency();
+    // qDebug() << "Кол-во ядер:" << comp.GetCPUNumberCore();
+
+    // //Материнская плата
+    // qDebug() << "Производитель материнской платы:" << comp.GetBoardManufacturer();
+    // qDebug() << "Наименование материнской платы:" << comp.GetBoardName();
+
+    // //ОЗУ
+    // qDebug() << "Общее кол-во памяти ОЗУ:" << comp.GetMemorySize() << "МБ";
+
+    // //qDebug() << system("wmic path win32_physicalmedia get SerialNumber"); //Серийник hdd
+    // //getWmiQueryResult(L"SELECT SerialNumber FROM Win32_PhysicalMedia", L"SerialNumber");
+
+    // //Видеокарта
+    // qDebug() << "Модель видеокарты: " << comp.GetGPUName();
+    // qDebug() << "Объём видеопамяти: " << comp.GetGPUMemSize() << "МБ";
+
+    // //Дисковод
+    // qDebug() << "Наличие дисковода: " << comp.GetCDROM();
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::on_pushButton_Add_clicked() //Обработка добавления новой строки в базу
+{
+    model->insertRow(model->rowCount()); //Создаём строку в конце таблицы.
+}
+
+void MainWindow::on_pushButton_Delete_clicked() { //Обработка удаления строки из базы
+    // Узнаём ID текущей строки, чтобы удалить связанные с этой строкой строки других таблиц
+    UINT ID = model->data(model->index(activeRow, model->fieldIndex("ID"))).toUInt(); // Узнаём ID выбранной строки
+    // Подготавливаем модель
+    QSqlTableModel cleansingModel(this, MainWindow::db); // Модель очистки таблиц
+    QString filterID = "ID = " + QString::number(ID); // Собираем строку фильтра
+    const int countTables = 4;
+    QString allTables[countTables] = {"BasicInf", "Hardware", "repair", "movements"};
+    for(int i = 0; i < countTables; ++i){ // Проходим по всем таблицам
+        cleansingModel.setTable(allTables[i]); // Выбираем для очистки таблицу
+        cleansingModel.setFilter(filterID); // Сортируем модель по ID
+        cleansingModel.select(); // Выполняем запрос
+        cleansingModel.removeRows(0,cleansingModel.rowCount()); // Удаляем строки
+        if(!cleansingModel.submitAll()) { // Применяем изменения к БД
+            qDebug() << "Ошибка удаления нформации из таблицы " << allTables[i] << " c ID = " << ID;
+        }
+        cleansingModel.clear(); // Очищаем модель
+    }
+    // Удаляем строку из основной таблицы MainTab
+    model->removeRow(activeRow); // Удаляем текущую активную строку
+    model->select(); // Обновляем таблицу
+}
+
+void MainWindow::on_tableViewMainTab_clicked(const QModelIndex &index) //Обработка активной строки
+{
+    activeRow = index.row(); //При нажатии на строку происходит обновление активной строки.
+}
+
+void MainWindow::on_tableViewMainTab_doubleClicked(const QModelIndex &index) // Обработка двойного нажатия (Открываем новую вкладку с существующим компом)
+{
+    QModelIndex newIndex = index.sibling(index.row(), 0); // Новый индекс указывает на ту же строку но колонка указывает на ID
+    UINT ID = model->data(newIndex).toUInt(); // Считываем значение ID  в этой строке
+    computerData *myNewTab1 = new computerData(ui->tabWidget_Main, ID); // Создаём экземпляр класса вкладки. (Передаём ID по которому будем искать информацию и предка)
+    // Подключаем сигнал окна computerData к слоту обновления таблиц в MainWindow
+    connect(myNewTab1, &computerData::sendUpdateSignal, this, &MainWindow::upDateTable);
+    ui->tabWidget_Main->addTab(myNewTab1,"Имя новой вкладки"); // Добавляем новую вкладку в виджет вкладок tabWidget_Main
+    ui->tabWidget_Main->setCurrentWidget(myNewTab1); // Автоматически открывается новая вкладка.
+    // Устанавливаем имя вкладки (Либо так, либо сделать ui public)
+    QSqlQuery localQuery(MainWindow::db);
+    localQuery.prepare("SELECT ComputerName FROM BasicInf WHERE ID = :id ORDER BY id DESC LIMIT 1"); // Выборка по ID задом наперёд с лимитом в 1 строку
+    localQuery.bindValue(":id", ID); // Вставляем в запрос нужную нам строку
+    if(!localQuery.exec()) // Запрашиваем
+        return;
+    if(localQuery.next())// Если есть результат запроса
+        ui->tabWidget_Main->setTabText(ui->tabWidget_Main->count() - 1, localQuery.value("ComputerName").toString());
+    localQuery.clear();
+}
+
+void MainWindow::on_pushButton_Create_clicked() //Создание новой вкладки с информацией о новом компьютере
+{
+    //QWidget *myNewTab = new QWidget(ui->tabWidget_Main);
+    //ui->tabWidget_Main->addTab(myNewTab,"Имя новой вкладки");
+    computerData *myNewTab1 = new computerData(ui->tabWidget_Main); // Создаём экземпляр класса вкладки, указываем предка.
+    // Подключаем сигнал окна computerData к слоту обновления таблиц в MainWindow
+    connect(myNewTab1, &computerData::sendUpdateSignal, this, &MainWindow::upDateTable);
+    ui->tabWidget_Main->addTab(myNewTab1,"Новая вкладка"); // Добавляем новую вкладку в виджет вкладок tabWidget_Main
+    ui->tabWidget_Main->setCurrentWidget(myNewTab1); // Автоматически открывается новая вкладка.
+}
+
+void MainWindow::upDateTable(QString tabName) { // Слот для обновления основной таблицы tableViewMainTab
+    model->select(); // Обновляем данные из БД и аввтоматически обновляет отображение в QTableView
+    ui->tabWidget_Main->setTabText(ui->tabWidget_Main->currentIndex(), tabName); // Обновляем надпись бара вкладки
+}
+
+void MainWindow::on_tabWidget_Main_tabCloseRequested(int index) { // Закрытие вкладки на крестик в баре вкладки
+    if(index) // Если вкладка не первая (домашняя)
+        ui->tabWidget_Main->removeTab(index); // То удаляем её
+}
+
+bool MainWindow::creationTablesDB() { // Создание таблиц для работы с БД
+    // Подготовкак запроса создания таблицы MainTab
+    query->prepare("CREATE TABLE IF NOT EXISTS MainTab ("
+                   "ID INT PRIMARY KEY,"
+                   "LastChange DATETIME,"
+                   "YearOfRelease YEAR,"
+                   "SerialNumber VARCHAR(50),"
+                   "Warranty VARCHAR(50))"
+                   "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"); // Для отображения русских букв
+    if(!query->exec()) {// Запрашиваем
+        qDebug() << "Не удалось создать таблицу: MainTab";
+        return false;
+    }
+    query->clear();
+    // Подготовка запроса создания таблицы BasicInf
+    query->prepare("CREATE TABLE IF NOT EXISTS BasicInf("
+                   "ID INT,"
+                   "LastChange DATETIME,"
+                   "ComputerName VARCHAR(50),"
+                   "OS VARCHAR(40),"
+                   "bitWidth VARCHAR(3),"
+                   "NumberOIT VARCHAR(7),"
+                   "Department VARCHAR(50),"
+                   "User VARCHAR(50),"
+                   "Antivirus VARCHAR(50),"
+                   "Status VARCHAR(30),"
+                   "BiosPassword VARCHAR(30),"
+                   "Comments TEXT)"
+                   "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"); // Для отображения русских букв
+    if(!query->exec()) {// Запрашиваем
+        qDebug() << "Не удалось создать таблицу: BasicInf";
+        return false;
+    }
+    query->clear();
+    // Подготовка запроса создания таблицы Hardware
+    query->prepare("CREATE TABLE IF NOT EXISTS Hardware("
+                   "ID INT,"
+                   "LastChange DATETIME,"
+                   "CPU VARCHAR(100),"
+                   "CPUManufacturer VARCHAR(50),"
+                   "CPUFrequency INT,"
+                   "NumberCPUCores INT,"
+                   "Motherboard VARCHAR(100),"
+                   "MotherboardManufacturer VARCHAR(50),"
+                   "Videocard TEXT,"
+                   "videoMemory INT,"
+                   "TypeVideoAdapter VARCHAR(50),"
+                   "RAM TEXT,"
+                   "RAMCapacity INT,"
+                   "typeDDR VARCHAR(50),"
+                   "TotalRAMSlots INT,"
+                   "CurrentRAMSlots INT,"
+                   "HDDSDD TEXT,"
+                   "ROMcapacity INT,"
+                   "NumberOfPhysicalDisks INT,"
+                   "Monitor TEXT,"
+                   "PrinterScaner TEXT,"
+                   "diskDrive VARCHAR(4),"
+                   "PowerSupply TEXT)"
+                   "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"); // Для отображения русских букв
+    if(!query->exec()) {// Запрашиваем
+        qDebug() << "Не удалось создать таблицу: Hardware";
+        return false;
+    }
+    query->clear();
+    // Подготовка запроса создания таблицы Repair
+    query->prepare("CREATE TABLE IF NOT EXISTS Repair("
+                   "ID INT,"
+                   "LastChange DATETIME,"
+                   "RepairDate DATETIME,"
+                   "RepairDescription TEXT,"
+                   "Specialist VARCHAR(100))"
+                   "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"); // Для отображения русских букв
+    if(!query->exec()) {// Запрашиваем
+        qDebug() << "Не удалось создать таблицу: Repair";
+        return false;
+    }
+    query->clear();
+    // Подготовка запроса создания таблицы Movements
+    query->prepare("CREATE TABLE IF NOT EXISTS Movements("
+                   "ID INT,"
+                   "LastChange DATETIME,"
+                   "MovementDate DATETIME,"
+                   "OldOwner VARCHAR(100),"
+                   "NewOwner VARCHAR(100),"
+                   "OldDepartment VARCHAR(100),"
+                   "NewDepartment VARCHAR(100),"
+                   "Notes TEXT)"
+                   "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"); // Для отображения русских букв
+    if(!query->exec()) {// Запрашиваем
+        qDebug() << "Не удалось создать таблицу: Movements";
+        return false;
+    }
+    query->clear();
+    return true;
+}

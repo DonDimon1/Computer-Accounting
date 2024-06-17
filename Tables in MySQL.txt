@@ -1,0 +1,120 @@
+
+CREATE TABLE IF NOT EXISTS MainTab (
+ID INT PRIMARY KEY,
+LastChange DATETIME,
+YearOfRelease YEAR,
+SerialNumber VARCHAR(50),
+Warranty VARCHAR(50)
+)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+ID INT NOT NULL AUTO_INCREMENT - автоматическое увилечение ID
+TIMESTAMP — тип данных, который автоматически обновляется при каждом изменении строки.
+
+
+Таблица Основная информация:
+CREATE TABLE IF NOT EXISTS BasicInf(
+ID INT,
+LastChange DATETIME,
+ComputerName VARCHAR(50),
+OS VARCHAR(40),					
+bitWidth VARCHAR(3),
+NumberOIT VARCHAR(7),
+Department VARCHAR(50),
+User VARCHAR(50),
+Antivirus VARCHAR(50),
+Status VARCHAR(30),
+BiosPassword VARCHAR(30),
+Comments TEXT
+)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+Таблица Железо:
+
+CREATE TABLE IF NOT EXISTS Hardware(
+ID INT,
+LastChange DATETIME,
+CPU VARCHAR(100),
+CPUManufacturer VARCHAR(50),
+CPUFrequency INT,
+NumberCPUCores INT,
+Motherboard VARCHAR(100),
+MotherboardManufacturer VARCHAR(50),
+Videocard TEXT,
+videoMemory INT,
+TypeVideoAdapter VARCHAR(50),
+RAM TEXT,
+RAMCapacity INT,
+typeDDR VARCHAR(50),
+TotalRAMSlots INT,
+CurrentRAMSlots INT,
+HDDSDD TEXT,
+ROMcapacity INT,
+NumberOfPhysicalDisks INT,
+Monitor TEXT,
+PrinterScaner TEXT,
+diskDrive VARCHAR(4),
+PowerSupply TEXT
+)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+Таблица Ремонт и обслуживание:
+CREATE TABLE IF NOT EXISTS Repair(
+ID INT,
+LastChange DATETIME,
+RepairDate DATETIME,
+RepairDescription TEXT,
+Specialist VARCHAR(100)
+)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+Таблица Перемещения:
+CREATE TABLE IF NOT EXISTS Movements(
+ID INT,
+LastChange DATETIME,
+MovementDate DATETIME,
+OldOwner VARCHAR(100),
+NewOwner VARCHAR(100),
+OldDepartment VARCHAR(100),
+NewDepartment VARCHAR(100),
+Notes TEXT
+)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+
+
+####################
+CREATE TABLE IF NOT EXISTS MainTab (
+ComputerName VARCHAR(50),
+YearOfRelease DATE,
+SerialNumber VARCHAR(50),
+Warranty VARCHAR(50), 
+User VARCHAR(50),
+Department VARCHAR(50),
+NumberVC VARCHAR(7),
+LastChange DATETIME,
+OS VARCHAR(40),
+digitCapacity VARCHAR(3),
+typeDDR VARCHAR(4),
+RAMCapacity INT,
+ROMcapacity INT,
+Antivirus VARCHAR(50), 
+TotalRAMSlots INT,
+CurrentRAMSlots INT,
+NumberOfPhysicalDisks INT,
+CPUManufacturer VARCHAR(50),
+NumberCPUCores INT,
+CPUFrequency INT,
+diskDrive BOOL,
+TypeVideoAdapter VARCHAR(50),
+videoMemory INT,
+CPU VARCHAR(100),
+Status VARCHAR(50),
+Comments TEXT,
+ID INT PRIMARY KEY
+)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
