@@ -47,9 +47,11 @@ private:
     Ui::MainWindow *ui;
     //QSqlDatabase db; //Объект класса QSqlDatabase
     QSqlQuery *query; //Объект класса QSqlQuery
-    QSqlTableModel *model; //Для считывания данных из БД в режиме редактирования
+    class MySqlTableModel; // Мой класс с виртуальными колонками
+    MySqlTableModel *model; //Для считывания данных из БД в режиме редактирования
+    //QSqlTableModel *model; //Для считывания данных из БД в режиме редактирования
     //QSqlQueryModel *model; //Для считывания данных из БД в режиме только чтения
 
-    int activeRow; //Номер активной строки
+    int activeRow; //Номер активной строки 
 };
 #endif // MAINWINDOW_H

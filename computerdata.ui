@@ -39,6 +39,13 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="1">
+        <widget class="QDateTimeEdit" name="dateTimeEdit_LastChange">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item row="3" column="0">
         <widget class="QLabel" name="label_Name">
          <property name="text">
@@ -91,16 +98,51 @@
         <widget class="QLineEdit" name="lineEdit_Warranty"/>
        </item>
        <item row="0" column="0">
-        <widget class="QPushButton" name="pushButton_Save">
-         <property name="text">
-          <string>Сохранить</string>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QPushButton" name="pushButton_SaveAndExit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>107</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Сохранить и закрыть</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_Save">
+           <property name="maximumSize">
+            <size>
+             <width>107</width>
+             <height>23</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Сохранить</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
-       <item row="2" column="1">
-        <widget class="QDateTimeEdit" name="dateTimeEdit_LastChange">
-         <property name="readOnly">
-          <bool>true</bool>
+       <item row="0" column="1">
+        <widget class="QPushButton" name="pushButton_Refresh">
+         <property name="maximumSize">
+          <size>
+           <width>170</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Обновление характеристик ПК</string>
          </property>
         </widget>
        </item>
@@ -138,6 +180,7 @@
      <property name="font">
       <font>
        <pointsize>8</pointsize>
+       <weight>50</weight>
        <bold>false</bold>
        <underline>false</underline>
       </font>
@@ -152,12 +195,13 @@
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab_1">
       <property name="font">
        <font>
         <pointsize>8</pointsize>
+        <weight>50</weight>
         <bold>false</bold>
         <underline>false</underline>
        </font>

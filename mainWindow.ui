@@ -118,6 +118,9 @@
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <item>
            <widget class="QTableView" name="tableViewMainTab">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="sortingEnabled">
              <bool>true</bool>
             </property>

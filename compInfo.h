@@ -52,7 +52,7 @@ public:
     //Информация о дисководе
     bool GetCDROM();
     //Информация о мониторах
-    void GetMonitor();                  // Получить информацию о мониторе
+    //void GetMonitor();                  // Получить информацию о мониторе
     struct infoMonitors;                // Структура Информации о конкретном мониторе
     std::vector<infoMonitors> vecMonitors; // Информация обо всех плашках мониторах
 private:

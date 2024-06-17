@@ -2,27 +2,19 @@
 #include "computerdata.h"
 #include "ui_computerdata.h"
 
-class computerData::MySqlTableModel : public QSqlTableModel { // Для запрета редактирования колонки с датой нужно переопределить класс QSqlTableModel
-public:
-    MySqlTableModel(QObject *parent = nullptr, QSqlDatabase db = QSqlDatabase()) :
-        QSqlTableModel(parent, db) {}
-
-    Qt::ItemFlags flags(const QModelIndex &index) const override { // Переопределяем условие редактирования
-        Qt::ItemFlags flags = QSqlTableModel::flags(index);
-        QString columnName = headerData(index.column(), Qt::Horizontal).toString(); // Узнаём название текущей колонки
-        // Проверяем, является ли текущая колонка "lastchange"
-        if (columnName == "Дата заполнения карточки") // Замените "yourColumnNameIndex" на соответствующую функцию, которая возвращает индекс колонки по ее названию
-        {
-            //flags &= ~Qt::ItemIsEditable;ItemIsEnabled
-            flags &= ~Qt::ItemIsEnabled;
-        }
-        return flags;
-    }
+Qt::ItemFlags computerData::MySqlTableModel::flags(const QModelIndex &index) const { // Переопределяем условие редактирования в MySqlTableModel
+    Qt::ItemFlags flags = QSqlTableModel::flags(index);
+    QString columnName = headerData(index.column(), Qt::Horizontal).toString(); // Узнаём название текущей колонки
+    if (columnName == "Дата заполнения карточки") // Проверяем, является ли текущая колонка "lastchange"
+        flags &= ~Qt::ItemIsEnabled;
+    return flags;
 };
 
-computerData::computerData(QWidget *parent, UINT ID) : // Конструктор открытия уже существующего комьютера
+computerData::computerData(QWidget *parent, UINT ID) : // Конструктор
     QWidget(parent),
-    ui(new Ui::computerData)
+    ui(new Ui::computerData),
+    deleteAction(new QAction("Удалить", this)), // Функции контекстного меню
+    insertAction(new QAction("Вставить", this))
 {
     ui->setupUi(this);
     // Создаём модели
@@ -43,6 +35,17 @@ computerData::computerData(QWidget *parent, UINT ID) : // Конструктор
     movements->setEditStrategy(QSqlTableModel::OnManualSubmit);
 
     computerData::modelsHeaders();// Создаём моделям заголовки
+
+    // Подключение таблиц к одному слоту и настройка контекстного меню
+    connect(ui->tableViewBottom_1, &QTableView::customContextMenuRequested, this, &computerData::on_CustomContextMenuRequested);
+    connect(ui->tableViewBottom_2, &QTableView::customContextMenuRequested, this, &computerData::on_CustomContextMenuRequested);
+    connect(ui->tableViewBottom_3, &QTableView::customContextMenuRequested, this, &computerData::on_CustomContextMenuRequested);
+    connect(ui->tableViewBottom_4, &QTableView::customContextMenuRequested, this, &computerData::on_CustomContextMenuRequested);
+    ui->tableViewBottom_1->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableViewBottom_2->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableViewBottom_3->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableViewBottom_4->setContextMenuPolicy(Qt::CustomContextMenu);
+
     //connect(ui->pushButton_Save, &QPushButton::clicked, this, &computerData::sendUpdateSignal); // Конект для обновления mainWindow (Автоматически на нажатие сохранить)
     //connect(this, &computerData::sendUpdateSignal, &MainWindow::upDateTable; // Конект для обновления mainWindow
     computerData::ID = ID; // Если ID == 0 то, компа нет в базе, иначе есть
@@ -51,7 +54,7 @@ computerData::computerData(QWidget *parent, UINT ID) : // Конструктор
     } else{ // Если мы открываем ещё НЕ существующий в базе компьютер
         computerData::defunctPC(); // Вызов функции помощника конструктора для НЕсуществующего в базе компьютера
     }
-}
+};
 
 void computerData::existingPC() { // Функция помощника конструктора для существующего в базе компьютера
     // Здесь мы достаём информацию из БД о существующем компе используюя индекс в таблице.
@@ -99,36 +102,51 @@ void computerData::existingPC() { // Функция помощника конс�
 
     // Устанавливаем текущее имя компьютера
     ui->label_ThisName->setText(basicInfModel->data(basicInfModel->index(basicInfModel->rowCount() - 1, basicInfModel->fieldIndex("ComputerName"))).toString());
-}
+};
 
 void computerData::defunctPC() { // Функция помощник конструктора для НЕ существующего в базе компьютера
+    computerData::readPCCharacteristics(); // Вызываем функцию считываем характеристики ПК с параметром ID по умолчанию = 0
+};
+
+void computerData::on_pushButton_Refresh_clicked() { // Обновление характеристик о комплектующих ПК
+    computerData::readPCCharacteristics(computerData::ID); // Вызываем функцию считываем характеристики ПК с параметром ID
+};
+
+computerData::~computerData() { // Деструктор
+    delete ui;
+};
+
+void computerData::readPCCharacteristics(UINT ID) { // Считываем характеристики ПК
+    QString ID_Str = "ID = " + QString::number(ID);
     // Здесь мы добавляем первую информацию о компьютере в карточку компьютера. Пользователь может её изменять.
     compInfo comp; //Объект класса compInfo для определения всех характеристик компьютера
     // Определяем данные для таблицы Основная информация
-    basicInfModel->setFilter("ID = 0"); // Сортируем модель по несуществующей строке
+    basicInfModel->setFilter(ID_Str); // Сортируем модель по несуществующей строке
     basicInfModel->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
+    int newRowIndex = basicInfModel->rowCount(); // Кол-во строк в отсортированной модели basicInfModel
     // Установка стандартных значений
-    basicInfModel->insertRow(0); // Вставить новую строку в конец таблицы
-    basicInfModel->setData(basicInfModel->index(0, basicInfModel->fieldIndex("ComputerName")), comp.GetComputerName_()); // Получаем имя компьютера
-    basicInfModel->setData(basicInfModel->index(0, basicInfModel->fieldIndex("OS")), comp.GetOsVersionName()); // Получаем ОС компьютера
-    basicInfModel->setData(basicInfModel->index(0, basicInfModel->fieldIndex("bitWidth")), comp.GetOsBitWidth()); // Получаем разрядность ОС
-    basicInfModel->setData(basicInfModel->index(0, basicInfModel->fieldIndex("User")), comp.GetUserName_()); // Получаем разрядность ОС
+    basicInfModel->insertRow(newRowIndex); // Вставить новую строку в конец таблицы
+    basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("ComputerName")), comp.GetComputerName_()); // Получаем имя компьютера
+    basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("OS")), comp.GetOsVersionName()); // Получаем ОС компьютера
+    basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("bitWidth")), comp.GetOsBitWidth()); // Получаем разрядность ОС
+    basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("User")), comp.GetUserName_()); // Получаем разрядность ОС
 
     ui->tableViewBottom_1->setModel(basicInfModel); // Устанавливаем модель
     ui->tableViewBottom_1->setColumnHidden(basicInfModel->fieldIndex("ID"), true); // Скрываем колонку с ID
 
     // Определяем данные для таблицы Железо и периферия
-    hardware->setFilter("ID = 0"); // Сортируем модель по несуществующей строке
+    hardware->setFilter(ID_Str); // Сортируем модель по несуществующей строке
     hardware->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
+    newRowIndex = hardware->rowCount(); // Кол-во строк в отсортированной модели hardware
     // Установка стандартных значений
-    hardware->insertRow(0); // Вставить новую строку в конец таблицы
-    hardware->setData(hardware->index(0, hardware->fieldIndex("CPU")), comp.GetCPUName()); // Получаем CPU
-    hardware->setData(hardware->index(0, hardware->fieldIndex("CPUFrequency")), (int)comp.GetCPUFrequency()); // Получаем частоту CPU
-    hardware->setData(hardware->index(0, hardware->fieldIndex("NumberCPUCores")), (int)comp.GetCPUNumberCore()); // Получаем кол-во ядер
-    hardware->setData(hardware->index(0, hardware->fieldIndex("Motherboard")), comp.GetBoardName()); // Получаем Мат.Плату
-    hardware->setData(hardware->index(0, hardware->fieldIndex("MotherboardManufacturer")), comp.GetBoardManufacturer()); // Получаем производителя Мат.Платы
-    hardware->setData(hardware->index(0, hardware->fieldIndex("Videocard")), comp.GetGPUName()); // Получаем видеокарту
-    hardware->setData(hardware->index(0, hardware->fieldIndex("videoMemory")), (int)comp.GetGPUMemSize()); // Получаем видеопамять
+    hardware->insertRow(newRowIndex); // Вставить новую строку в конец таблицы
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CPU")), comp.GetCPUName()); // Получаем CPU
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CPUFrequency")), (int)comp.GetCPUFrequency()); // Получаем частоту CPU
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberCPUCores")), (int)comp.GetCPUNumberCore()); // Получаем кол-во ядер
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Motherboard")), comp.GetBoardName()); // Получаем Мат.Плату
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("MotherboardManufacturer")), comp.GetBoardManufacturer()); // Получаем производителя Мат.Платы
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Videocard")), comp.GetGPUName()); // Получаем видеокарту
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("videoMemory")), (int)comp.GetGPUMemSize()); // Получаем видеопамять
     QString RAMStr = ""; // Строка с параметрами ОЗУ
     QString typeDDRStr = ""; // Строка с типом ddr
     WORD numRAM = comp.vecMemory.size(); // Кол-во плашек памяти
@@ -138,11 +156,11 @@ void computerData::defunctPC() { // Функция помощник констр
         if(!typeDDRStr.contains("DDR")) // Записываем тип DDR памяти
             typeDDRStr = comp.vecMemory[i].MemoryType;
     };
-    hardware->setData(hardware->index(0, hardware->fieldIndex("RAM")), RAMStr); // Получаем ОЗУ
-    hardware->setData(hardware->index(0, hardware->fieldIndex("RAMCapacity")), (int)comp.GetMemorySize()); // Получаем общее количество ОЗУ
-    hardware->setData(hardware->index(0, hardware->fieldIndex("typeDDR")), typeDDRStr); // Получаем тип DDR
-    hardware->setData(hardware->index(0, hardware->fieldIndex("TotalRAMSlots")), (int)comp.TotalRAMSlots); // Получаем Общее кол-во слотов
-    hardware->setData(hardware->index(0, hardware->fieldIndex("CurrentRAMSlots")), (int)numRAM); // Получаем Общее кол-во слотов
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAM")), RAMStr); // Получаем ОЗУ
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAMCapacity")), (int)comp.GetMemorySize()); // Получаем общее количество ОЗУ
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("typeDDR")), typeDDRStr); // Получаем тип DDR
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("TotalRAMSlots")), (int)comp.TotalRAMSlots); // Получаем Общее кол-во слотов
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CurrentRAMSlots")), (int)numRAM); // Получаем Общее кол-во слотов
     QString driveStr = ""; // Строка с дисками
     WORD numDrive = comp.vecDrive.size(); // Кол-во дисков
     WORD totalCapacityDrive = 0; // Общий объём всех дисков
@@ -151,38 +169,17 @@ void computerData::defunctPC() { // Функция помощник констр
         driveStr += QString::number(comp.vecDrive[i].Size) + " Гб, ";
         totalCapacityDrive += comp.vecDrive[i].Size;                        // Общий объём всех дисков
     }
-    hardware->setData(hardware->index(0, hardware->fieldIndex("HDDSDD")), driveStr); // Получаем HDD & SSD
-    hardware->setData(hardware->index(0, hardware->fieldIndex("ROMcapacity")), (int)totalCapacityDrive); // Получаем общий объём дисков QString::number(totalCapacityDrive) + " Гб"
-    hardware->setData(hardware->index(0, hardware->fieldIndex("NumberOfPhysicalDisks")), (int)numDrive); // Получаем кол-во дисков
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("HDDSDD")), driveStr); // Получаем HDD & SSD
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("ROMcapacity")), (int)totalCapacityDrive); // Получаем общий объём дисков QString::number(totalCapacityDrive) + " Гб"
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberOfPhysicalDisks")), (int)numDrive); // Получаем кол-во дисков
     QString cdROM = "Нет"; // Строка CDROM
     if(comp.GetCDROM())
         cdROM = "Есть"; // Обработка наличия CDROM
-    hardware->setData(hardware->index(0, hardware->fieldIndex("diskDrive")), cdROM); // Получить наличие дисковода cdROM.toLatin1()
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("diskDrive")), cdROM); // Получить наличие дисковода cdROM.toLatin1()
 
     ui->tableViewBottom_2->setModel(hardware); // Устанавливаем второй таблице модель Hardware
     ui->tableViewBottom_2->setColumnHidden(hardware->fieldIndex("ID"), true); // Скрываем колонку с ID
-
-    // Определяем данные для таблицы Ремонт и обслуживание
-    repair->setFilter("ID = 0"); // Сортируем модель по несуществующей строке
-    repair->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
-    repair->insertRow(0); // Вставить новую строку в конец таблицы
-
-    ui->tableViewBottom_3->setModel(repair); // Устанавливаем 3ей таблице модель repair
-    ui->tableViewBottom_3->setColumnHidden(repair->fieldIndex("ID"), true); // Скрываем колонку с ID
-
-    // Определяем данные для таблицы Перемещения
-    movements->setFilter("ID = 0"); // Сортируем модель по несуществующей строке
-    movements->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
-    movements->insertRow(0); // Вставить новую строку в конец таблицы
-
-    ui->tableViewBottom_4->setModel(movements); // Устанавливаем 4ой таблице модель movements
-    ui->tableViewBottom_4->setColumnHidden(movements->fieldIndex("ID"), true); // Скрываем колонку с ID
-}
-
-computerData::~computerData() // Деструктор
-{
-    delete ui;
-}
+};
 
 void computerData::on_pushButton_Save_clicked() // Сохраняем данные в БД
 {
@@ -210,36 +207,102 @@ void computerData::on_pushButton_Save_clicked() // Сохраняем данны
     }
     query->clear(); // Очищаем запрос
 
-    // Сохраняем информацию в таблице basicInf(basicInfModel->rowCount())
-    basicInfModel->setData(basicInfModel->index(basicInfModel->rowCount() - 1, basicInfModel->fieldIndex("ID")), computerData::ID); // Сохраняем ID
-    basicInfModel->setData(basicInfModel->index(basicInfModel->rowCount() - 1, basicInfModel->fieldIndex("LastChange")), QDateTime::currentDateTime()); // Дата последнего изменения таблицы basicInf
-    basicInfModel->submitAll(); // Сохраняем изменения в basicInf
     QString filterID = "ID = " + QString::number(computerData::ID); // Собираем строку фильтра
-    basicInfModel->setFilter(filterID); // Сортируем модель по новому ID
-
+    //TODO Сейчас изменяем только последнюю строку. Надо исправить
+    // Сохраняем информацию в таблице basicInf(basicInfModel->rowCount())
+    if(basicInfModel->isDirty()){ // Если модель изменена
+        basicInfModel->setData(basicInfModel->index(basicInfModel->rowCount() - 1, basicInfModel->fieldIndex("ID")), computerData::ID); // Сохраняем ID
+        basicInfModel->setData(basicInfModel->index(basicInfModel->rowCount() - 1, basicInfModel->fieldIndex("LastChange")), QDateTime::currentDateTime()); // Дата последнего изменения таблицы basicInf
+        basicInfModel->submitAll(); // Сохраняем изменения в basicInf
+        basicInfModel->setFilter(filterID); // Сортируем модель по новому ID
+    }
     // Сохраняем информацию в таблице hardware
-    hardware->setData(hardware->index(hardware->rowCount() - 1, hardware->fieldIndex("ID")), computerData::ID);
-    hardware->setData(hardware->index(hardware->rowCount() - 1, hardware->fieldIndex("LastChange")), QDateTime::currentDateTime());
-    hardware->submitAll();
-    hardware->setFilter(filterID);
-
+    if(hardware->isDirty()){ // Если модель изменена
+        hardware->setData(hardware->index(hardware->rowCount() - 1, hardware->fieldIndex("ID")), computerData::ID);
+        hardware->setData(hardware->index(hardware->rowCount() - 1, hardware->fieldIndex("LastChange")), QDateTime::currentDateTime());
+        hardware->submitAll();
+        hardware->setFilter(filterID);
+    }
     // Сохраняем информацию в таблице repair
-    repair->setData(repair->index(repair->rowCount() - 1, repair->fieldIndex("ID")), computerData::ID);
-    repair->setData(repair->index(repair->rowCount() - 1, repair->fieldIndex("LastChange")), QDateTime::currentDateTime());
-    repair->submitAll();
-    repair->setFilter(filterID);
-
+    if(repair->isDirty()){
+        repair->setData(repair->index(repair->rowCount() - 1, repair->fieldIndex("ID")), computerData::ID);
+        repair->setData(repair->index(repair->rowCount() - 1, repair->fieldIndex("LastChange")), QDateTime::currentDateTime());
+        repair->submitAll();
+        repair->setFilter(filterID);
+    }
     // Сохраняем информацию в таблице movements
-    movements->setData(movements->index(movements->rowCount() - 1, movements->fieldIndex("ID")), computerData::ID);
-    movements->setData(movements->index(movements->rowCount() - 1, movements->fieldIndex("LastChange")), QDateTime::currentDateTime());
-    movements->submitAll();
-    movements->setFilter(filterID);
-
+    if(movements->isDirty()){
+        movements->setData(movements->index(movements->rowCount() - 1, movements->fieldIndex("ID")), computerData::ID);
+        movements->setData(movements->index(movements->rowCount() - 1, movements->fieldIndex("LastChange")), QDateTime::currentDateTime());
+        movements->submitAll();
+        movements->setFilter(filterID);
+    }
     // Действия не касающиеся БД (Если будут много вынесу в отдельную функцию)
     // Устанавливаем текущее имя компьютера
     ui->label_ThisName->setText(basicInfModel->data(basicInfModel->index(basicInfModel->rowCount() - 1, basicInfModel->fieldIndex("ComputerName"))).toString());
-    this->sendUpdateSignal(ui->label_ThisName->text());
-}
+    this->sendUpdateSignal(ui->label_ThisName->text()); // Чтобы во вкладке было название пк
+};
+
+void computerData::on_pushButton_SaveAndExit_clicked() {    // Нажимаем на кнопку сохранить и выйти
+    computerData::on_pushButton_Save_clicked();             // Сохраняем данные в БД
+    this->~computerData(); // Вызов деструктора (Не могу понять правильно ли так делать или нет? Мб утечка памяти предка)
+};
+
+void computerData::on_CustomContextMenuRequested(const QPoint &pos) {   // Контекстное меню для таблиц
+    QTableView *tableView = qobject_cast<QTableView*>(sender());        // Узнаём что за таблица сейчас используется
+    if(!tableView) return;
+    QMenu menu(this);                                                   // Создаём контекстное меню
+    //QAction *update=menu.addAction("Обновить");
+
+    if(tableView != ui->tableViewBottom_1 && tableView != ui->tableViewBottom_2){ // В первых двух таб. не требуется
+        menu.addAction(insertAction);                                   // Добавляем в него пункт вставить строку
+        connect(insertAction, &QAction::triggered, this, &computerData::insertRow);
+//        connect(insertAction, &QAction::triggered, this, [&tableView]() // Баг. Кол-во строк в таблице растёт =+ 1 при каждом вставить
+//        {
+//            QAbstractItemModel *model = tableView->model(); // Создаём указатель на модель таблицы
+//            if(auto myModel = dynamic_cast<MySqlTableModel*>(model)) {  // Преобразуем модель в кастомную модель MySqlTableModel
+//                int row = myModel->rowCount();
+//                myModel->insertRow(row);
+//                QModelIndex index = myModel->index(row, 0);
+//                tableView->setCurrentIndex(index);
+//                tableView->edit(index);
+//            }
+//        });
+    }
+    QModelIndex index = tableView->indexAt(pos);
+    if(index.isValid()) {                                               // Проверяем есть ли строка под курсором
+        menu.addAction(deleteAction);                                   // Если да, то добавляем возможность её удаления
+        connect(deleteAction, &QAction::triggered, this, [&tableView]() // Удаление строки в таблице с помощью контекстного меню
+        {
+            QAbstractItemModel *model = tableView->model();             // Создаём указатель на модель таблицы
+            if(auto myModel = dynamic_cast<MySqlTableModel*>(model)) {  // Преобразуем модель в кастомную модель MySqlTableModel
+                QModelIndex index = tableView->currentIndex();          // Вычисляем текущую строку
+                if(index.isValid()) {
+                    myModel->removeRow(index.row());                    // Удаляем её
+                }
+            }
+        });
+    }
+    menu.exec(tableView->viewport()->mapToGlobal(pos));                 // Отображаем меню в таблице
+};
+
+// Шаблонно не получилось сделать какая то фигня с Q_OBJECT с вложенным классом MySqlTableModel.
+void computerData::insertRow() { // Вставить новую строку с помощью контекстного меню
+    if(ui->tableViewBottom_3->hasFocus()){
+        int row = repair->rowCount();
+        repair->insertRow(row);
+        QModelIndex index = repair->index(row, 0);
+        ui->tableViewBottom_3->setCurrentIndex(index);
+        ui->tableViewBottom_3->edit(index);
+    }
+    if(ui->tableViewBottom_4->hasFocus()){
+        int row = movements->rowCount();
+        movements->insertRow(row);
+        QModelIndex index = movements->index(row, 0);
+        ui->tableViewBottom_4->setCurrentIndex(index);
+        ui->tableViewBottom_4->edit(index);
+    }
+};
 
 void computerData::modelsHeaders() { // Функция для задания заголовков моделям
     // Установка заголовков таблицы basicInf

@@ -234,25 +234,25 @@ QString compInfo::GetGPUName(){ // Получить модель видеока�
     displayDevice.cb = sizeof (DISPLAY_DEVICE);
 
     DWORD deviceIndex = 0;
-       // while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
-       //     if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-       //         return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
-       //         //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-       //     } else{
-       //         //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-       //     }
-       //     deviceIndex++;
-       // }
+       while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
+           if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+               return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
+               //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+           } else{
+               //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+           }
+           deviceIndex++;
+       }
     //На разных компах по разному
-    while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
-        if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-            return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
-            //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-        } else{
-            //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-        }
-        deviceIndex++;
-    }
+//     while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
+//         if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+//             return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
+//             //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+//         } else{
+//             //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+//         }
+//         deviceIndex++;
+//     }
     return "Undefined";
 };
 
@@ -302,27 +302,27 @@ bool compInfo::GetCDROM(){ // Получить наличие дисковода
     return false; // Если не нашли CDROM
 };
 
-void compInfo::GetMonitor() { // Получить инфу об мониторе
-    HMONITOR hMonitor = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY); // Получаем список мониторов
-    while (hMonitor != NULL) {
-        // Получаем информацию о мониторе
-        MONITORINFO monitorInfo;
-        GetMonitorInfo(hMonitor, &monitorInfo);
+//void compInfo::GetMonitor() { // Получить инфу об мониторе
+//    HMONITOR hMonitor = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY); // Получаем список мониторов
+//    while (hMonitor != NULL) {
+//        // Получаем информацию о мониторе
+//        MONITORINFO monitorInfo;
+//        GetMonitorInfo(hMonitor, &monitorInfo);
 
-        // Сохраняем параметры монитора
-        compInfo::infoMonitors newStruct; // Создаём структуру для хранения данных
-        //newStruct.Name = monitorInfo.cbSize;
-//        std::cout << "Monitor name: " << monitorInfo.szDevice << std::endl;
-//        std::cout << "Size: " << monitorInfo.rcMonitor.right << " x " << monitorInfo.rcMonitor.bottom << std::endl;
-//        std::cout << "Position: " << monitorInfo.rcMonitor.left << ", " << monitorInfo.rcMonitor.top << std::endl;
-//        std::cout << "State: " << monitorInfo.dwFlags << std::endl;
-//        std::cout << "Type: " << monitorInfo.dmPosition << std::endl;
-//        std::cout << "Resolution: " << monitorInfo.dwWidth << " x " << monitorInfo.dwHeight << std::endl;
-//        std::cout << "Aspect ratio: " << monitorInfo.dmPelsWidth << " / " << monitorInfo.dmPelsHeight << std::endl;
-//        std::cout << "Vertical sync: " << (monitorInfo.dwFlags & VERTRES ? "enabled" : "disabled") << std::endl;
-//        std::cout << "Refresh rate: " << monitorInfo.dwRefreshRate << std::endl;
+//        // Сохраняем параметры монитора
+//        compInfo::infoMonitors newStruct; // Создаём структуру для хранения данных
+//        newStruct.Name = monitorInfo.cbSize;
+////        std::cout << "Monitor name: " << monitorInfo.szDevice << std::endl;
+////        std::cout << "Size: " << monitorInfo.rcMonitor.right << " x " << monitorInfo.rcMonitor.bottom << std::endl;
+////        std::cout << "Position: " << monitorInfo.rcMonitor.left << ", " << monitorInfo.rcMonitor.top << std::endl;
+////        std::cout << "State: " << monitorInfo.dwFlags << std::endl;
+////        std::cout << "Type: " << monitorInfo.dmPosition << std::endl;
+////        std::cout << "Resolution: " << monitorInfo.dwWidth << " x " << monitorInfo.dwHeight << std::endl;
+////        std::cout << "Aspect ratio: " << monitorInfo.dmPelsWidth << " / " << monitorInfo.dmPelsHeight << std::endl;
+////        std::cout << "Vertical sync: " << (monitorInfo.dwFlags & VERTRES ? "enabled" : "disabled") << std::endl;
+////        std::cout << "Refresh rate: " << monitorInfo.dwRefreshRate << std::endl;
 
-        // Переходим к следующему монитору
-        //hMonitor = MonitorNext(hMonitor);
-    }
-};
+//        // Переходим к следующему монитору
+//        //hMonitor = MonitorNext(hMonitor);
+//    }
+//};

@@ -11,7 +11,6 @@ QString BYTEtoSTRING(BYTE **ptrStr); // Определяем функцию дл
 compInfo::SMBIOS::SMBIOS() //Конструктор
 {
     compInfo::SMBIOS::ReadSMBIOS(); //Функция чтения таблицы SMBIOS
-    int g = 7;
 };
 
 
