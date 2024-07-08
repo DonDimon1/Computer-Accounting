@@ -24,7 +24,8 @@ public:
     class SMBIOS;                       // Вложенный класс, в нём парсим таблицу SMBIOS.
     void DecodeSMBIOS(compInfo::SMBIOS *SMTable); // Декодируем таблицу SMBIOS
 
-    const char *GetOsVersionName();     // Получить версию ОС
+    //const char *GetOsVersionName();     // Получить версию ОС
+    QString GetOsVersionNameQSysInfo(); // Получить версию ОС с использованием QSysInfo
     QString GetComputerName_();         // Получить имя компьютера
     QString GetUserName_();             // Получить имя пользователя
     const char *GetOsBitWidth();        // Разрядность ОС

@@ -127,7 +127,7 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
     // Установка стандартных значений
     basicInfModel->insertRow(newRowIndex); // Вставить новую строку в конец таблицы
     basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("ComputerName")), comp.GetComputerName_()); // Получаем имя компьютера
-    basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("OS")), comp.GetOsVersionName()); // Получаем ОС компьютера
+    basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("OS")), comp.GetOsVersionNameQSysInfo()); // Получаем ОС компьютера
     basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("bitWidth")), comp.GetOsBitWidth()); // Получаем разрядность ОС
     basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("User")), comp.GetUserName_()); // Получаем разрядность ОС
 

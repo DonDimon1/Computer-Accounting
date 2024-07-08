@@ -21,8 +21,9 @@ void compInfo::GetHardDriveInfo(){ //Функцию для чтения инфо
     arguments << "-Command" << "Get-WmiObject Win32_DiskDrive; Exit 0;"; //<< "-NoProfile" << "exit"
     process.start("powershell", arguments); // Запускаем процесс
 
-    if(!process.waitForReadyRead(30000)){ // Ждём пока данные будут доступны для чтения (waitForFinished зависает намертво)
+    //if(!process.waitForReadyRead(30000)){ // Ждём пока данные будут доступны для чтения (waitForFinished зависает намертво)
     //if(!process.waitForFinished(-1)){
+    if(!process.waitForFinished(30000)){
         process.kill(); // Завершаем процесс
         return; // Выходим из функции
     }
@@ -65,35 +66,38 @@ void compInfo::DecodeSMBIOS(compInfo::SMBIOS *SMTable){     //Функция д�
     }
 };
 
-const char *compInfo::GetOsVersionName(){ //Версия ОС
-    if (IsWindows10OrGreater())
-        return "Windows 10";
-    if (IsWindows8Point1OrGreater())
-        return "Windows 8.1";
-    if (IsWindows8OrGreater())
-        return "Windows 8";
-    if (IsWindows7SP1OrGreater())
-        return "Windows 7 SP1";
-    if (IsWindows7OrGreater())
-        return "Windows 7";
-    if (IsWindowsVistaSP2OrGreater())
-        return "Windows Vista SP2";
-    if (IsWindowsVistaSP1OrGreater())
-        return "Windows Vista SP1";
-    if (IsWindowsVistaOrGreater())
-        return "Windows Vista";
-    if (IsWindowsXPSP3OrGreater())
-        return "Windows XP SP3";
-    if (IsWindowsXPSP2OrGreater())
-        return "Windows XP SP2";
-    if (IsWindowsXPSP1OrGreater())
-        return "Windows XP SP1";
-    if (IsWindowsXPOrGreater())
-        return "Windows XP";
-    if (IsWindowsServer())
-        return "Windows Server"; //Потом исправить
-    return "Unknown";
-};
+QString compInfo::GetOsVersionNameQSysInfo(){//Версия ОС
+    return QSysInfo::prettyProductName();
+}
+// const char *compInfo::GetOsVersionName(){ //Версия ОС
+//     if (IsWindows10OrGreater())
+//         return "Windows 10";
+//     if (IsWindows8Point1OrGreater())
+//         return "Windows 8.1";
+//     if (IsWindows8OrGreater())
+//         return "Windows 8";
+//     if (IsWindows7SP1OrGreater())
+//         return "Windows 7 SP1";
+//     if (IsWindows7OrGreater())
+//         return "Windows 7";
+//     if (IsWindowsVistaSP2OrGreater())
+//         return "Windows Vista SP2";
+//     if (IsWindowsVistaSP1OrGreater())
+//         return "Windows Vista SP1";
+//     if (IsWindowsVistaOrGreater())
+//         return "Windows Vista";
+//     if (IsWindowsXPSP3OrGreater())
+//         return "Windows XP SP3";
+//     if (IsWindowsXPSP2OrGreater())
+//         return "Windows XP SP2";
+//     if (IsWindowsXPSP1OrGreater())
+//         return "Windows XP SP1";
+//     if (IsWindowsXPOrGreater())
+//         return "Windows XP";
+//     if (IsWindowsServer())
+//         return "Windows Server"; //Потом исправить
+//     return "Unknown";
+// };
 
 QString compInfo::GetComputerName_(){ //Получить имя компьютера
     char buffer[MAX_COMPUTERNAME_LENGTH + 1] = ""; //Буфер для вывода имени компьютера
@@ -168,35 +172,6 @@ DWORD compInfo::GetCPUNumberCore(){ //Получить кол-во ядер пр
     return sysInfo.dwNumberOfProcessors; //Кол-во ядер процессора
 };
 
-//compInfo::thisCPU GetCPU(){ //Получить информацию о процессоре
-//    compInfo::thisCPU cpuStruct; //Возвращаемая структура
-//    // Получение информации о системе
-//    SYSTEM_INFO sysInfo;
-//    GetSystemInfo(&sysInfo);
-//    cpuStruct.numCore = sysInfo.dwNumberOfProcessors; //Кол-во ядер процессора
-//    // Получение информации о процессоре
-//    char cpuName[256]; //Имя процессора
-//    DWORD dwMHz = 0; //Частота процессора
-//    DWORD dwBufferSize = sizeof(dwMHz);
-//    HKEY hKey;
-//    // Открываем реестр Windows для чтения информации о процессоре
-//    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
-//        // Чтение частоты процессора из реестра
-//        RegQueryValueEx(hKey, "~MHz", NULL, NULL, (LPBYTE)&cpuStruct.dwMHz, &dwBufferSize);
-//        // Чтение имени процессора из реестра
-//        dwBufferSize = sizeof(cpuName);
-//        RegQueryValueEx(hKey, "ProcessorNameString", NULL, NULL, (LPBYTE)&cpuStruct.cpuName, &dwBufferSize);
-//        // Закрываем ключ реестра
-//        RegCloseKey(hKey);
-//    }
-//    //Возврат результата
-//    return cpuStruct;
-//    // Вывод информации о процессоре
-//    //qDebug() << "Processor Name: " << cpuName;
-//    //qDebug() << "Processor Frequency: " << dwMHz << " MHz";
-//    //qDebug() << "Number of Logical Processors: " << sysInfo.dwNumberOfProcessors;
-//};
-
 QString compInfo::GetBoardManufacturer(){ //Получить производителя мат.платы
     char MBManufacturer[256];
     HKEY hKey;
@@ -234,25 +209,25 @@ QString compInfo::GetGPUName(){ // Получить модель видеока�
     displayDevice.cb = sizeof (DISPLAY_DEVICE);
 
     DWORD deviceIndex = 0;
-       while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
-           if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-               return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
-               //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-           } else{
-               //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-           }
-           deviceIndex++;
-       }
+       // while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
+       //     if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+       //         return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
+       //         //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+       //     } else{
+       //         //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+       //     }
+       //     deviceIndex++;
+       // }
     //На разных компах по разному
-//     while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
-//         if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-//             return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
-//             //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-//         } else{
-//             //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-//         }
-//         deviceIndex++;
-//     }
+    while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
+        if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+            return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
+            //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+        } else{
+            //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+        }
+        deviceIndex++;
+    }
     return "Undefined";
 };
 
