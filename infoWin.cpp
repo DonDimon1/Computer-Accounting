@@ -1,4 +1,6 @@
-#include "compInfo.h"
+#ifdef _WIN32
+
+#include "infoWin.h"
 #include "smbios.h" //Описание класса SMBIOS
 #include <sysinfoapi.h>
 #include <QCoreApplication> //Для запроса PowerShell
@@ -6,14 +8,14 @@
 #include <QDebug>
 //#include <QStorageInfo>
 
-compInfo::compInfo() //Конструктор
+InfoWin::InfoWin() //Конструктор
 {
-    compInfo::SMBIOS SMTable; // Класс для содержания необработанной инфы из SMBIOS
-    compInfo::DecodeSMBIOS(&SMTable); // Расшифровать информацию из таблицы SMBIOS
-    compInfo::GetHardDriveInfo(); //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
+    InfoWin::SMBIOS SMTable; // Класс для содержания необработанной инфы из SMBIOS
+    InfoWin::DecodeSMBIOS(&SMTable); // Расшифровать информацию из таблицы SMBIOS
+    InfoWin::GetHardDriveInfo(); //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
 }
 
-void compInfo::GetHardDriveInfo(){ //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
+void InfoWin::GetHardDriveInfo(){ //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
     QProcess process; // Создаем процесс PowerShell
 
     // Устанавливаем команду для выполнения скрипта PowerShell
@@ -34,7 +36,7 @@ void compInfo::GetHardDriveInfo(){ //Функцию для чтения инфо
     //Обрабатываем данные
     WORD diskCount = queryResult.count("Model      :"); // Кол-во вхождений подстроки в строку
     for(WORD i = 0; i < diskCount; ++i){  // Проходим по всем дискам
-        compInfo::infoHardDrive newStruct; // Создаём структуру для хранения данных
+        InfoWin::infoHardDrive newStruct; // Создаём структуру для хранения данных
         int index = queryResult.indexOf("Model      :", 0, Qt::CaseInsensitive); // Ищем подстроку Model
         queryResult.remove(0, index + 13); // Удаляем лишние данные (Получаем начало названия диска)
         index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец названия
@@ -44,32 +46,32 @@ void compInfo::GetHardDriveInfo(){ //Функцию для чтения инфо
         QString tempStr = queryResult.left(index); // Определяем размер диска в отдельную строку
         long long tempLong = tempStr.toLongLong(); // Конвертируем байты а численный тип
         newStruct.Size = tempLong / (1024 * 1024 * 1024); // Конвертируем байты в гигабайты и сохраняем значение
-        compInfo::vecDrive.push_back(newStruct); // Сохраняем структуру в векторе
+        InfoWin::vecDrive.push_back(newStruct); // Сохраняем структуру в векторе
     }
 };
 
-void compInfo::DecodeSMBIOS(compInfo::SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
+void InfoWin::DecodeSMBIOS(InfoWin::SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
     // ОЗУ
     WORD slotsNum = SMTable->vecMemory.size();                                                  // Кол-во разъёмов для памяти, найденных в SMBIOS
-    compInfo::TotalRAMSlots = slotsNum;                                                         // Сохраняем инфу о общем кол-ве разъёмов для памяти
+    InfoWin::TotalRAMSlots = slotsNum;                                                         // Сохраняем инфу о общем кол-ве разъёмов для памяти
     for(UINT i = 0; i < slotsNum; ++i){                                                         // Перебераем все плашки ОЗУ
         if(SMTable->vecMemory.at(i).Size){                                                      // Если плашка памяти установлена
-            compInfo::infoMemory newStruct;                                                     // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
+            InfoWin::infoMemory newStruct;                                                     // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
             newStruct.Size = SMTable->vecMemory.at(i).Size;                                     // Сохраняем Объём плашки в МБ.
             newStruct.FormFactor = SMTable->GetFormFactor(SMTable->vecMemory.at(i).FormFactor); // Сохраняем Форм фактор плашки
             newStruct.DeviceLocator = SMTable->vecMemory.at(i).DeviceLocator;                   // В каокм слоте стоит плашка
             newStruct.MemoryType = SMTable->GetMemoryType(SMTable->vecMemory.at(i).MemoryType); // Сохраняем тип памяти
             newStruct.Speed = SMTable->vecMemory.at(i).Speed;                                   // Сохраняем скорость
             newStruct.Manufacturer = SMTable->vecMemory.at(i).Manufacturer;                     // Сохраняем производителя
-            compInfo::vecMemory.push_back(newStruct);                                           // Добавляем инфу об установленной плашке памяти
+            InfoWin::vecMemory.push_back(newStruct);                                           // Добавляем инфу об установленной плашке памяти
         }                                                                                       // Кол-во элементов вектора обозначает кол-во установленных плашек ОЗУ
     }
 };
 
-QString compInfo::GetOsVersionNameQSysInfo(){//Версия ОС
+QString InfoWin::GetOsVersionNameQSysInfo(){//Версия ОС
     return QSysInfo::prettyProductName();
 }
-// const char *compInfo::GetOsVersionName(){ //Версия ОС
+// const char *InfoWin::GetOsVersionName(){ //Версия ОС
 //     if (IsWindows10OrGreater())
 //         return "Windows 10";
 //     if (IsWindows8Point1OrGreater())
@@ -99,7 +101,7 @@ QString compInfo::GetOsVersionNameQSysInfo(){//Версия ОС
 //     return "Unknown";
 // };
 
-QString compInfo::GetComputerName_(){ //Получить имя компьютера
+QString InfoWin::GetComputerName_(){ //Получить имя компьютера
     char buffer[MAX_COMPUTERNAME_LENGTH + 1] = ""; //Буфер для вывода имени компьютера
     DWORD size = sizeof(buffer);                   //Размер этого буфера
     if (GetComputerNameA(buffer, &size))             //Если функция отработала корректно
@@ -107,7 +109,7 @@ QString compInfo::GetComputerName_(){ //Получить имя компьюте
     return "undefine";
 };
 
-QString compInfo::GetUserName_(){ //Получить имя пользователя
+QString InfoWin::GetUserName_(){ //Получить имя пользователя
     char buffer[MAX_COMPUTERNAME_LENGTH + 1] = ""; //Буфер для вывода имени компьютера
     DWORD size = sizeof(buffer);                   //Размер этого буфера
     if (GetUserNameA(buffer, &size))             //Если функция отработала корректно
@@ -115,7 +117,7 @@ QString compInfo::GetUserName_(){ //Получить имя пользовате
     return "undefine";
 };
 
-const char *compInfo::GetOsBitWidth(){ //Получить разрядность винды
+const char *InfoWin::GetOsBitWidth(){ //Получить разрядность винды
 //    #if defined(__LP64__) || defined(_M_IA64) //(Кросс-платформа)
 //        return "x64";
 //    #endif
@@ -127,7 +129,7 @@ const char *compInfo::GetOsBitWidth(){ //Получить разрядность
     #endif
 };
 
-QString compInfo::GetCPUName(){ //Получить имя процессора
+QString InfoWin::GetCPUName(){ //Получить имя процессора
     char cpuName[256]; //Имя процессора
     HKEY hKey;
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
@@ -140,7 +142,7 @@ QString compInfo::GetCPUName(){ //Получить имя процессора
     return "undefine";
 };
 
-QString compInfo::GetCPUType(){ //Получить тип архитектуры процессора
+QString InfoWin::GetCPUType(){ //Получить тип архитектуры процессора
     char cpuType[256];
     HKEY hKey;
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
@@ -153,7 +155,7 @@ QString compInfo::GetCPUType(){ //Получить тип архитектуры
     return "undefine";
 };
 
-DWORD compInfo::GetCPUFrequency(){ //Получить частоту процессора
+DWORD InfoWin::GetCPUFrequency(){ //Получить частоту процессора
     DWORD dwMHz = 0; //Частота процессора
     HKEY hKey;
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
@@ -166,13 +168,13 @@ DWORD compInfo::GetCPUFrequency(){ //Получить частоту проце�
     return 0;
 };
 
-DWORD compInfo::GetCPUNumberCore(){ //Получить кол-во ядер процессора
+DWORD InfoWin::GetCPUNumberCore(){ //Получить кол-во ядер процессора
     SYSTEM_INFO sysInfo; // Получение информации о системе
     GetSystemInfo(&sysInfo);
     return sysInfo.dwNumberOfProcessors; //Кол-во ядер процессора
 };
 
-QString compInfo::GetBoardManufacturer(){ //Получить производителя мат.платы
+QString InfoWin::GetBoardManufacturer(){ //Получить производителя мат.платы
     char MBManufacturer[256];
     HKEY hKey;
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
@@ -184,7 +186,7 @@ QString compInfo::GetBoardManufacturer(){ //Получить производи�
     return "undefine";
 };
 
-QString compInfo::GetBoardName(){ //Получить название мат.платы
+QString InfoWin::GetBoardName(){ //Получить название мат.платы
     char MBName[256];
     HKEY hKey;
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
@@ -196,7 +198,7 @@ QString compInfo::GetBoardName(){ //Получить название мат.п�
     return "undefine";
 };
 
-DWORD compInfo::GetMemorySize(){ //Получить общий объём ОЗУ
+DWORD InfoWin::GetMemorySize(){ //Получить общий объём ОЗУ
     MEMORYSTATUSEX memoryStatus;
     memoryStatus.dwLength = sizeof (memoryStatus);
     GlobalMemoryStatusEx(&memoryStatus);
@@ -204,7 +206,7 @@ DWORD compInfo::GetMemorySize(){ //Получить общий объём ОЗУ
 };
 
 
-QString compInfo::GetGPUName(){ // Получить модель видеокарты
+QString InfoWin::GetGPUName(){ // Получить модель видеокарты
     DISPLAY_DEVICE displayDevice;
     displayDevice.cb = sizeof (DISPLAY_DEVICE);
 
@@ -231,7 +233,7 @@ QString compInfo::GetGPUName(){ // Получить модель видеока�
     return "Undefined";
 };
 
-DWORD compInfo::GetGPUMemSize(){ // Получить объём видеопамяти
+DWORD InfoWin::GetGPUMemSize(){ // Получить объём видеопамяти
     IDXGIFactory* pFactory;
     HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
     if (FAILED(hr)){
@@ -260,7 +262,7 @@ DWORD compInfo::GetGPUMemSize(){ // Получить объём видеопам
     pFactory->Release();
 };
 
-bool compInfo::GetCDROM(){ // Получить наличие дисковода
+bool InfoWin::GetCDROM(){ // Получить наличие дисковода
     // Проходим по буквам дисков, начиная с 'A' и заканчивая 'Z'
     for (char drive = 'A'; drive <= 'Z'; ++drive) {
         // Формируем строку с именем диска
@@ -277,7 +279,7 @@ bool compInfo::GetCDROM(){ // Получить наличие дисковода
     return false; // Если не нашли CDROM
 };
 
-//void compInfo::GetMonitor() { // Получить инфу об мониторе
+//void InfoWin::GetMonitor() { // Получить инфу об мониторе
 //    HMONITOR hMonitor = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY); // Получаем список мониторов
 //    while (hMonitor != NULL) {
 //        // Получаем информацию о мониторе
@@ -285,7 +287,7 @@ bool compInfo::GetCDROM(){ // Получить наличие дисковода
 //        GetMonitorInfo(hMonitor, &monitorInfo);
 
 //        // Сохраняем параметры монитора
-//        compInfo::infoMonitors newStruct; // Создаём структуру для хранения данных
+//        InfoWin::infoMonitors newStruct; // Создаём структуру для хранения данных
 //        newStruct.Name = monitorInfo.cbSize;
 ////        std::cout << "Monitor name: " << monitorInfo.szDevice << std::endl;
 ////        std::cout << "Size: " << monitorInfo.rcMonitor.right << " x " << monitorInfo.rcMonitor.bottom << std::endl;
@@ -301,3 +303,5 @@ bool compInfo::GetCDROM(){ // Получить наличие дисковода
 //        //hMonitor = MonitorNext(hMonitor);
 //    }
 //};
+
+#endif

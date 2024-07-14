@@ -1,3 +1,5 @@
+#ifdef _WIN32 // Класс для сбора всей информации о комьютере в среде Windows
+
 #include "smbios.h"
 #include <QDebug>       //Для отладки
 
@@ -263,3 +265,4 @@ QString compInfo::SMBIOS::GetMemoryType(BYTE MemoryType){ // Получить т
     }
 };
 
+#endif

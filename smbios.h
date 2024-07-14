@@ -1,10 +1,12 @@
 #ifndef SMBIOS_H
 #define SMBIOS_H
 
+// Временно определил _WIN32, на самом деле от ОС не зависит
+#ifdef _WIN32 // Класс для сбора всей информации о комьютере в среде Windows
 // Класс для парсинга таблицы SMBIOS компьютера.
-#include "compInfo.h"
+#include "infoWin.h"
 
-class compInfo::SMBIOS
+class InfoWin::SMBIOS
 {
 public:
     SMBIOS();
@@ -70,6 +72,6 @@ struct compInfo::SMBIOS::SMInfoMemory{      // Определение струк
 
 const static int TYPE_END_OF_TABLE = 127;
 
-
+#endif
 
 #endif // SMBIOS_H

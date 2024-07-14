@@ -1,18 +1,19 @@
-#ifndef COMPINFO_H
-#define COMPINFO_H
+#ifndef INFOWIN_H
+#define INFOWIN_H
 
-// Класс для сбора всей информации о комьютере
+#ifdef _WIN32 // Класс для сбора всей информации о комьютере в среде Windows
+
 #include <QApplication>
 #include <windows.h>        // WinAPI
 #include <dxgi.h>           // DirectX API
-//#include <tchar.h>        // Надстройкой char для мультиязычных приложений
 #include <versionhelpers.h> // Для определения версии ОС
+
 //#include <QScreen> // Для определения монитора
 
 
-typedef unsigned __int64 QWORD; // У меня почему то не определён QWORD. (Возможно старая версия SDK) 
+typedef unsigned __int64 QWORD; // У меня почему то не определён QWORD. (Возможно старая версия SDK)
 
-class compInfo
+class InfoWin
 {
 public:
 //    struct thisCPU{     //Данные о процессоре
@@ -20,9 +21,9 @@ public:
 //        DWORD dwMHz; //Частота процессора
 //        unsigned long numCore; //Кол-во ядер
 //    };
-    compInfo();                         // Конструктор
+    InfoWin();                         // Конструктор
     class SMBIOS;                       // Вложенный класс, в нём парсим таблицу SMBIOS.
-    void DecodeSMBIOS(compInfo::SMBIOS *SMTable); // Декодируем таблицу SMBIOS
+    void DecodeSMBIOS(InfoWin::SMBIOS *SMTable); // Декодируем таблицу SMBIOS
 
     //const char *GetOsVersionName();     // Получить версию ОС
     QString GetOsVersionNameQSysInfo(); // Получить версию ОС с использованием QSysInfo
@@ -59,7 +60,7 @@ public:
 private:
 };
 
-struct compInfo::infoMemory {
+struct InfoWin::infoMemory {
     WORD Size;              // Объём памяти
     QString FormFactor;     // Форм фактор
     QString DeviceLocator;  // В Каком слоте на мат.плате
@@ -68,12 +69,12 @@ struct compInfo::infoMemory {
     QString Manufacturer;   // Производитель
 };
 
-struct compInfo::infoHardDrive{ // Структура информации о конкретном жёстком диске(или ссд).
+struct InfoWin::infoHardDrive{ // Структура информации о конкретном жёстком диске(или ссд).
     QString Name;           // Название жёсткого диска
     double Size;            // Объём жёсткого диска
 };
 
-struct compInfo::infoMonitors {
+struct InfoWin::infoMonitors {
     QString Name;           // Название монитора
     QString Size;           // Размер
     QString Type;           // Тип
@@ -82,5 +83,6 @@ struct compInfo::infoMonitors {
     QString RefreshRate;    // Частота обновления экрана
 };
 
+#endif
 
-#endif // COMPINFO_H
+#endif // INFOWIN_H

@@ -11,21 +11,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-find_package(Qt6 REQUIRED COMPONENTS Sql)                               # Для базы данных
-#find_package(wbemuuid)                                                 # Для WMI
+#find_package(Qt6 REQUIRED COMPONENTS Sql)                               # Для базы данных
+find_package(Qt5 REQUIRED COMPONENTS Sql)                               # Для базы данных
+
+if (WIN32)
+    #find_package(wbemuuid)                                                 # Для WMI
+endif()
 
 set(PROJECT_SOURCES
         main.cpp
-        mainWindow.cpp
-        mainWindow.h
-        mainWindow.ui
-        computerdata.h
-        computerdata.cpp
-        computerdata.ui
-        compInfo.h
-        compInfo.cpp
-        smbios.h
-        smbios.cpp
+       mainWindow.cpp
+       mainWindow.h
+       mainWindow.ui
+       computerdata.h
+       computerdata.cpp
+       computerdata.ui
+       infoWin.h
+       infoWin.cpp
+       infoLin.h
+       infoLin.cpp
+       smbios.h
+       smbios.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -53,9 +59,12 @@ else()
 endif()
 
 target_link_libraries(ComputerAccounting PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(ComputerAccounting PRIVATE Qt6::Sql)                          # Для базы данных
-target_link_libraries(ComputerAccounting PRIVATE dxgi)                              # DirectX API wbemuuid
-target_link_libraries(ComputerAccounting PRIVATE wbemuuid)                          # Для WMI
+target_link_libraries(ComputerAccounting PRIVATE Qt5::Sql)                          # Для базы данных
+
+if (WIN32)
+    target_link_libraries(ComputerAccounting PRIVATE dxgi)                              # DirectX API wbemuuid
+    target_link_libraries(ComputerAccounting PRIVATE wbemuuid)                          # Для WMI
+endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
@@ -72,6 +81,15 @@ set_target_properties(ComputerAccounting PROPERTIES
 )
 
 include(GNUInstallDirs)
+
+# ADD_EXECUTABLE(_main main.cpp
+#                     mainWindow.cpp mainWindow.h mainWindow.ui
+#                     computerdata.h computerdata.cpp computerdata.ui
+#               )
+# ADD_EXECUTABLE(windows infoWin.h infoWin.cpp)
+# ADD_EXECUTABLE(linux infoLin.h infoLin.cpp)
+# ADD_EXECUTABLE(smbios smbios.h smbios.cpp)
+
 install(TARGETS ComputerAccounting
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

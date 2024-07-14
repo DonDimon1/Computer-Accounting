@@ -5,9 +5,12 @@
 #include <QWidget>
 #include <QStandardItemModel> //Для модели
 #include "mainWindow.h" // Считывание параметров компьютера
-#include "compInfo.h" // Считывание параметров компьютера
+#include "infoWin.h" // Считывание параметров компьютера Windows
+#include "infoLin.h" // Считывание параметров компьютера Linux
 #include <QSqlQuery>    //Для работы с SQL
 #include <QMenu> // Для контекстного меню
+
+using UINT = unsigned int; // На некоторых старых версиях этого нет
 
 namespace Ui {
 class computerData;
@@ -36,7 +39,7 @@ signals:
     void sendUpdateSignal(QString tabName = "Новая вкладка"); // Отправка сигнала для обновления таблицы tableViewMainTab на форме mainWindow
 
 private slots:
-    void on_pushButton_Save_clicked(); 
+    void on_pushButton_Save_clicked();
     void on_pushButton_SaveAndExit_clicked();
     void on_pushButton_Refresh_clicked();
 

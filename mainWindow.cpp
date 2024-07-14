@@ -1,7 +1,7 @@
 #include "mainWindow.h"
 #include "./ui_mainWindow.h"
-//#include "compInfo.h"
-#include <windows.h> // winAPI
+#include "infoLin.h"
+//#include <windows.h> // winAPI
 #include <QStandardItemModel> //Для модели
 
 class MainWindow::MySqlTableModel : public QSqlTableModel { // Переопределяем для виртуальных колонок
@@ -35,7 +35,7 @@ public:
         }
         return QSqlQueryModel::data(item, role); // Если не виртуальная колонка
     }
-    // Переопределяем метод flags для того чтобы ячейка была активная а не серая
+    // Переопределяем метод flags для того чтобы ячейка была акcompInfoтивная а не серая
     Qt::ItemFlags flags(const QModelIndex &index) const override {
         if(!index.isValid()) {return Qt::NoItemFlags;}
         if(index.column() == 5)  // Пока что хардкод
@@ -52,12 +52,15 @@ MainWindow::MainWindow(QWidget *parent) //Конструктор
     this->showMaximized(); //Начальное окно на весь экран
 
     // Подключение к БД
+    qDebug() << "Drivers list: " << QSqlDatabase::drivers();
     db = QSqlDatabase::addDatabase("QMYSQL", "mydb");   //Создания объекта соединения
     //db.setDatabaseName("./testDB.db");
     db.setHostName("localhost");//127.0.0.1
     db.setDatabaseName("ComputerAccounting");
     db.setUserName("root");
-    db.setPassword("EAZzae1234");
+    //db.setPassword("EAZzae1234");
+    db.setPassword("");
+
     if(!db.open())                                      //Проверка подключения к БД
         qDebug() << "Не удалось подключиться к БД: " << db.databaseName();
 
@@ -91,11 +94,11 @@ MainWindow::MainWindow(QWidget *parent) //Конструктор
     model->setHeaderData(model->columnCount() - 1, Qt::Horizontal, QObject::tr("Name"), Qt::DisplayRole); // Имя новой колонки
 
     //####################//
-    // compInfo comp; //Объект класса compInfo
-    // qDebug() << "Запущена Windows:" << comp.GetOsVersionName(); //Инфа о версии ОС
-    // qDebug() << "Имя компьютера:" << comp.GetComputerName_(); //Получить имя компа
-    // qDebug() << "Имя пользователя:" << comp.GetUserName_(); //Получить имя пользователя
-    // qDebug() << "Разрядность ОС:" << comp.GetOsBitWidth(); //Получить разрядность ОС
+    InfoLin comp; //Объект класса compInfo
+    qDebug() << "Запущена Windows:" << comp.GetOsVersionNameQSysInfo(); //Инфа о версии ОС
+    qDebug() << "Имя компьютера:" << comp.GetComputerName_(); //Получить имя компа
+    qDebug() << "Имя пользователя:" << comp.GetUserName_(); //Получить имя пользователя
+    qDebug() << "Разрядность ОС:" << comp.GetOsBitWidth(); //Получить разрядность ОС
 
     // //Процессор
     // qDebug() << "Имя процессора:" << comp.GetCPUName();
