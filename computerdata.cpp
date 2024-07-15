@@ -21,19 +21,19 @@ computerData::computerData(QWidget *parent, UINT ID) : // Конструктор
     ui->setupUi(this);
     //Создаём модели
     basicInfModel = new MySqlTableModel(this, MainWindow::db); // Подключение к БД
-    basicInfModel->setTable("basicInf"); // Устанавливает таблицу базы данных, с которой работает модель.
+    basicInfModel->setTable("BasicInf"); // Устанавливает таблицу базы данных, с которой работает модель.
     basicInfModel->setEditStrategy(QSqlTableModel::OnManualSubmit); // Стратегия редактирования при которой изменения сохр. в бд только при вызове submitAll()
 
     hardware = new MySqlTableModel(this, MainWindow::db);
-    hardware->setTable("hardware");
+    hardware->setTable("Hardware");
     hardware->setEditStrategy(QSqlTableModel::OnManualSubmit);
 
     repair = new MySqlTableModel(this, MainWindow::db);
-    repair->setTable("repair");
+    repair->setTable("Repair");
     repair->setEditStrategy(QSqlTableModel::OnManualSubmit);
 
     movements = new MySqlTableModel(this, MainWindow::db);
-    movements->setTable("movements");
+    movements->setTable("Movements");
     movements->setEditStrategy(QSqlTableModel::OnManualSubmit);
 
     computerData::modelsHeaders();// Создаём моделям заголовки
@@ -130,15 +130,13 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
         exit();
     #endif
 
-
-
     // Определяем данные для таблицы Основная информация
     basicInfModel->setFilter(ID_Str); // Сортируем модель по несуществующей строке
     basicInfModel->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
+
     int newRowIndex = basicInfModel->rowCount(); // Кол-во строк в отсортированной модели basicInfModel
     // Установка стандартных значений
     basicInfModel->insertRow(newRowIndex); // Вставить новую строку в конец таблицы
-
     basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("ComputerName")), comp.GetComputerName_()); // Получаем имя компьютера
     basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("OS")), comp.GetOsVersionNameQSysInfo()); // Получаем ОС компьютера
     basicInfModel->setData(basicInfModel->index(newRowIndex, basicInfModel->fieldIndex("bitWidth")), comp.GetOsBitWidth()); // Получаем разрядность ОС
@@ -149,17 +147,17 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
 
     //Временно отключу
 
-//    // Определяем данные для таблицы Железо и периферия
-//    hardware->setFilter(ID_Str); // Сортируем модель по несуществующей строке
-//    hardware->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
-//    newRowIndex = hardware->rowCount(); // Кол-во строк в отсортированной модели hardware
-//    // Установка стандартных значений
-//    hardware->insertRow(newRowIndex); // Вставить новую строку в конец таблицы
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CPU")), comp.GetCPUName()); // Получаем CPU
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CPUFrequency")), (int)comp.GetCPUFrequency()); // Получаем частоту CPU
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberCPUCores")), (int)comp.GetCPUNumberCore()); // Получаем кол-во ядер
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Motherboard")), comp.GetBoardName()); // Получаем Мат.Плату
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("MotherboardManufacturer")), comp.GetBoardManufacturer()); // Получаем производителя Мат.Платы
+    // Определяем данные для таблицы Железо и периферия
+    hardware->setFilter(ID_Str); // Сортируем модель по несуществующей строке
+    hardware->select(); // Заполняет модель данными из таблицы, которая была задана через setTable()
+    newRowIndex = hardware->rowCount(); // Кол-во строк в отсортированной модели hardware
+    // Установка стандартных значений
+    hardware->insertRow(newRowIndex); // Вставить новую строку в конец таблицы
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CPU")), comp.GetCPUName()); // Получаем CPU
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CPUFrequency")), (int)comp.GetCPUFrequency()); // Получаем частоту CPU
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberCPUCores")), (int)comp.GetCPUNumberCore()); // Получаем кол-во ядер
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Motherboard")), comp.GetBoardName()); // Получаем Мат.Плату
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("MotherboardManufacturer")), comp.GetBoardManufacturer()); // Получаем производителя Мат.Платы
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Videocard")), comp.GetGPUName()); // Получаем видеокарту
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("videoMemory")), (int)comp.GetGPUMemSize()); // Получаем видеопамять
 //    QString RAMStr = ""; // Строка с параметрами ОЗУ
@@ -172,7 +170,7 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
 //            typeDDRStr = comp.vecMemory[i].MemoryType;
 //    };
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAM")), RAMStr); // Получаем ОЗУ
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAMCapacity")), (int)comp.GetMemorySize()); // Получаем общее количество ОЗУ
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAMCapacity")), (int)comp.GetMemorySize()); // Получаем общее количество ОЗУ
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("typeDDR")), typeDDRStr); // Получаем тип DDR
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("TotalRAMSlots")), (int)comp.TotalRAMSlots); // Получаем Общее кол-во слотов
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CurrentRAMSlots")), (int)numRAM); // Получаем Общее кол-во слотов
@@ -192,8 +190,8 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
 //        cdROM = "Есть"; // Обработка наличия CDROM
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("diskDrive")), cdROM); // Получить наличие дисковода cdROM.toLatin1()
 
-//    ui->tableViewBottom_2->setModel(hardware); // Устанавливаем второй таблице модель Hardware
-//    ui->tableViewBottom_2->setColumnHidden(hardware->fieldIndex("ID"), true); // Скрываем колонку с ID
+    ui->tableViewBottom_2->setModel(hardware); // Устанавливаем второй таблице модель Hardware
+    ui->tableViewBottom_2->setColumnHidden(hardware->fieldIndex("ID"), true); // Скрываем колонку с ID
 };
 
 void computerData::on_pushButton_Save_clicked() // Сохраняем данные в БД

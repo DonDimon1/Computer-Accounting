@@ -3,6 +3,8 @@
 #include "infoLin.h"
 //#include <windows.h> // winAPI
 #include <QStandardItemModel> //Для модели
+#include <QtSql>
+
 
 class MainWindow::MySqlTableModel : public QSqlTableModel { // Переопределяем для виртуальных колонок
 public:
@@ -35,7 +37,7 @@ public:
         }
         return QSqlQueryModel::data(item, role); // Если не виртуальная колонка
     }
-    // Переопределяем метод flags для того чтобы ячейка была акcompInfoтивная а не серая
+    // Переопределяем метод flags для того чтобы ячейка была compInfo активная а не серая
     Qt::ItemFlags flags(const QModelIndex &index) const override {
         if(!index.isValid()) {return Qt::NoItemFlags;}
         if(index.column() == 5)  // Пока что хардкод
@@ -94,11 +96,29 @@ MainWindow::MainWindow(QWidget *parent) //Конструктор
     model->setHeaderData(model->columnCount() - 1, Qt::Horizontal, QObject::tr("Name"), Qt::DisplayRole); // Имя новой колонки
 
     //####################//
-    InfoLin comp; //Объект класса compInfo
-    qDebug() << "Запущена Windows:" << comp.GetOsVersionNameQSysInfo(); //Инфа о версии ОС
-    qDebug() << "Имя компьютера:" << comp.GetComputerName_(); //Получить имя компа
-    qDebug() << "Имя пользователя:" << comp.GetUserName_(); //Получить имя пользователя
-    qDebug() << "Разрядность ОС:" << comp.GetOsBitWidth(); //Получить разрядность ОС
+//    InfoLin comp; //Объект класса compInfo
+//    qDebug() << "Запущена Windows:" << comp.GetOsVersionNameQSysInfo(); //Инфа о версии ОС
+//    qDebug() << "Имя компьютера:" << comp.GetComputerName_(); //Получить имя компа
+//    qDebug() << "Имя пользователя:" << comp.GetUserName_(); //Получить имя пользователя
+//    qDebug() << "Разрядность ОС:" << comp.GetOsBitWidth(); //Получить разрядность ОС
+
+//    QSqlTableModel *mod = new QSqlTableModel(this, db);
+//    mod->setTable("BasicInf");
+//    mod->setEditStrategy(QSqlTableModel::OnManualSubmit);
+//    mod->select();
+//    mod->insertRow(0);
+
+//    int row = 0;
+//    int col = 2;
+//    QVariant newValue = "new_value";
+//    QModelIndex ind = mod->index(row, col);
+//    if(!ind.isValid())
+//        qDebug() << "Invalid index";
+
+//    if(!mod->setData(ind, newValue))
+//        qDebug() << "Failed to set data:" << mod->lastError().text();
+//    ui->tableViewMainTab->setModel(mod);
+
 
     // //Процессор
     // qDebug() << "Имя процессора:" << comp.GetCPUName();
@@ -149,7 +169,7 @@ void MainWindow::on_pushButton_Delete_clicked() { // Обработка удал
         cleansingModel.select();                            // Выполняем запрос
         cleansingModel.removeRows(0, cleansingModel.rowCount()); // Удаляем строки
         if(!cleansingModel.submitAll()) {                   // Применяем изменения к БД
-            qDebug() << "Ошибка удаления нформации из таблицы " << allTables[i] << " c ID = " << ID;
+            qDebug() << "Ошибка удаления иформации из таблицы " << allTables[i] << " c ID = " << ID;
         }
         cleansingModel.clear();                             // Очищаем модель
     }
