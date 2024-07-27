@@ -11,7 +11,10 @@
 #include <sstream>      // Из std::string в DWORD
 
 // Псевдонимы
-using DWORD = unsigned long;
+using BYTE = unsigned char;         // 1 байт (8 бит)
+using WORD = unsigned short;        // 2 байта (16 бит)
+using DWORD = unsigned long;        // 4 байта (32 бита)
+using QWORD = unsigned long long;   // 8 байт (64 бита)
 
 class InfoLin
 {
@@ -31,6 +34,19 @@ public:
     QString GetBoardName();             // Получить название мат.платы.
     //Информация о ОЗУ
     DWORD GetMemorySize();              // Общий объём оперативной памяти.
+    WORD TotalRAMSlots;                 // Общее кол-во разъёмов для памяти
+    struct infoMemory;                  // Структура информации о конкретной плашки памяти.
+    std::vector<infoMemory> vecMemory;  // Информация обо всех плашках ОЗУ
+    void DecodeSMBIOS();                // Функция для получения информации об оперативной памяти из SMBIOS для Linux
+};
+
+struct InfoLin::infoMemory {
+    WORD Size;              // Объём памяти
+    QString FormFactor;     // Форм фактор
+    QString DeviceLocator;  // В Каком слоте на мат.плате
+    QString MemoryType;     // Тип модуля памяти
+    WORD Speed;             // Скорость
+    QString Manufacturer;   // Производитель
 };
 
 #endif
