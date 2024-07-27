@@ -1,105 +1,108 @@
 #ifdef _WIN32
 
 #include "infoWin.h"
-#include "smbios.h" //Описание класса SMBIOS
+#include <QApplication>
+#include <windows.h>        // WinAPI
+#include <dxgi.h>           // DirectX API
+#include <versionhelpers.h> // Для определения версии ОС
+//
 #include <sysinfoapi.h>
 #include <QCoreApplication> //Для запроса PowerShell
 #include <QProcess>
 #include <QDebug>
 //#include <QStorageInfo>
 
-InfoWin::InfoWin() //Конструктор
-{
-    InfoWin::SMBIOS SMTable; // Класс для содержания необработанной инфы из SMBIOS
+ InfoWin::InfoWin() { //Конструктор
+    SMBIOS SMTable; // Класс для содержания необработанной инфы из SMBIOS
     InfoWin::DecodeSMBIOS(&SMTable); // Расшифровать информацию из таблицы SMBIOS
-    InfoWin::GetHardDriveInfo(); //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
-}
+//     InfoWin::GetHardDriveInfo(); //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
+ }
 
-void InfoWin::GetHardDriveInfo(){ //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
-    QProcess process; // Создаем процесс PowerShell
+// void InfoWin::GetHardDriveInfo(){ //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
+//     QProcess process; // Создаем процесс PowerShell
 
-    // Устанавливаем команду для выполнения скрипта PowerShell
-    QStringList arguments;
-    arguments << "-Command" << "Get-WmiObject Win32_DiskDrive; Exit 0;"; //<< "-NoProfile" << "exit"
-    process.start("powershell", arguments); // Запускаем процесс
+//     // Устанавливаем команду для выполнения скрипта PowerShell
+//     QStringList arguments;
+//     arguments << "-Command" << "Get-WmiObject Win32_DiskDrive; Exit 0;"; //<< "-NoProfile" << "exit"
+//     process.start("powershell", arguments); // Запускаем процесс
 
-    //if(!process.waitForReadyRead(30000)){ // Ждём пока данные будут доступны для чтения (waitForFinished зависает намертво)
-    //if(!process.waitForFinished(-1)){
-    if(!process.waitForFinished(30000)){
-        process.kill(); // Завершаем процесс
-        return; // Выходим из функции
-    }
-    QString queryResult = process.readAllStandardOutput();    // Если всё хорошо, считываем данные из запроса.
-    // Destroyed while process ("powershell") is still running.
-    process.kill(); // Завершаем процесс (// waitForFinished зависает намертво)
+//     //if(!process.waitForReadyRead(30000)){ // Ждём пока данные будут доступны для чтения (waitForFinished зависает намертво)
+//     //if(!process.waitForFinished(-1)){
+//     if(!process.waitForFinished(30000)){
+//         process.kill(); // Завершаем процесс
+//         return; // Выходим из функции
+//     }
+//     QString queryResult = process.readAllStandardOutput();    // Если всё хорошо, считываем данные из запроса.
+//     // Destroyed while process ("powershell") is still running.
+//     process.kill(); // Завершаем процесс (// waitForFinished зависает намертво)
 
-    //Обрабатываем данные
-    WORD diskCount = queryResult.count("Model      :"); // Кол-во вхождений подстроки в строку
-    for(WORD i = 0; i < diskCount; ++i){  // Проходим по всем дискам
-        InfoWin::infoHardDrive newStruct; // Создаём структуру для хранения данных
-        int index = queryResult.indexOf("Model      :", 0, Qt::CaseInsensitive); // Ищем подстроку Model
-        queryResult.remove(0, index + 13); // Удаляем лишние данные (Получаем начало названия диска)
-        index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец названия
-        newStruct.Name = queryResult.left(index); // Сохраняем имя диска
-        queryResult.remove(0, index + 15); // Удаляем лишние данные (Получаем начало размера диска)
-        index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец размера диска
-        QString tempStr = queryResult.left(index); // Определяем размер диска в отдельную строку
-        long long tempLong = tempStr.toLongLong(); // Конвертируем байты а численный тип
-        newStruct.Size = tempLong / (1024 * 1024 * 1024); // Конвертируем байты в гигабайты и сохраняем значение
-        InfoWin::vecDrive.push_back(newStruct); // Сохраняем структуру в векторе
-    }
+//     //Обрабатываем данные
+//     WORD diskCount = queryResult.count("Model      :"); // Кол-во вхождений подстроки в строку
+//     for(WORD i = 0; i < diskCount; ++i){  // Проходим по всем дискам
+//         InfoWin::infoHardDrive newStruct; // Создаём структуру для хранения данных
+//         int index = queryResult.indexOf("Model      :", 0, Qt::CaseInsensitive); // Ищем подстроку Model
+//         queryResult.remove(0, index + 13); // Удаляем лишние данные (Получаем начало названия диска)
+//         index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец названия
+//         newStruct.Name = queryResult.left(index); // Сохраняем имя диска
+//         queryResult.remove(0, index + 15); // Удаляем лишние данные (Получаем начало размера диска)
+//         index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец размера диска
+//         QString tempStr = queryResult.left(index); // Определяем размер диска в отдельную строку
+//         long long tempLong = tempStr.toLongLong(); // Конвертируем байты а численный тип
+//         newStruct.Size = tempLong / (1024 * 1024 * 1024); // Конвертируем байты в гигабайты и сохраняем значение
+//         InfoWin::vecDrive.push_back(newStruct); // Сохраняем структуру в векторе
+//     }
+// };
+
+void InfoWin::DecodeSMBIOS(SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
+//     // ОЗУ
+//     WORD slotsNum = SMTable->vecMemory.size();                                                  // Кол-во разъёмов для памяти, найденных в SMBIOS
+//     InfoWin::TotalRAMSlots = slotsNum;                                                         // Сохраняем инфу о общем кол-ве разъёмов для памяти
+//     for(UINT i = 0; i < slotsNum; ++i){                                                         // Перебераем все плашки ОЗУ
+//         if(SMTable->vecMemory.at(i).Size){                                                      // Если плашка памяти установлена
+//             InfoWin::infoMemory newStruct;                                                     // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
+//             newStruct.Size = SMTable->vecMemory.at(i).Size;                                     // Сохраняем Объём плашки в МБ.
+//             newStruct.FormFactor = SMTable->GetFormFactor(SMTable->vecMemory.at(i).FormFactor); // Сохраняем Форм фактор плашки
+//             newStruct.DeviceLocator = SMTable->vecMemory.at(i).DeviceLocator;                   // В каокм слоте стоит плашка
+//             newStruct.MemoryType = SMTable->GetMemoryType(SMTable->vecMemory.at(i).MemoryType); // Сохраняем тип памяти
+//             newStruct.Speed = SMTable->vecMemory.at(i).Speed;                                   // Сохраняем скорость
+//             newStruct.Manufacturer = SMTable->vecMemory.at(i).Manufacturer;                     // Сохраняем производителя
+//             InfoWin::vecMemory.push_back(newStruct);                                           // Добавляем инфу об установленной плашке памяти
+//         }                                                                                       // Кол-во элементов вектора обозначает кол-во установленных плашек ОЗУ
+//     }
 };
 
-void InfoWin::DecodeSMBIOS(InfoWin::SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
-    // ОЗУ
-    WORD slotsNum = SMTable->vecMemory.size();                                                  // Кол-во разъёмов для памяти, найденных в SMBIOS
-    InfoWin::TotalRAMSlots = slotsNum;                                                         // Сохраняем инфу о общем кол-ве разъёмов для памяти
-    for(UINT i = 0; i < slotsNum; ++i){                                                         // Перебераем все плашки ОЗУ
-        if(SMTable->vecMemory.at(i).Size){                                                      // Если плашка памяти установлена
-            InfoWin::infoMemory newStruct;                                                     // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
-            newStruct.Size = SMTable->vecMemory.at(i).Size;                                     // Сохраняем Объём плашки в МБ.
-            newStruct.FormFactor = SMTable->GetFormFactor(SMTable->vecMemory.at(i).FormFactor); // Сохраняем Форм фактор плашки
-            newStruct.DeviceLocator = SMTable->vecMemory.at(i).DeviceLocator;                   // В каокм слоте стоит плашка
-            newStruct.MemoryType = SMTable->GetMemoryType(SMTable->vecMemory.at(i).MemoryType); // Сохраняем тип памяти
-            newStruct.Speed = SMTable->vecMemory.at(i).Speed;                                   // Сохраняем скорость
-            newStruct.Manufacturer = SMTable->vecMemory.at(i).Manufacturer;                     // Сохраняем производителя
-            InfoWin::vecMemory.push_back(newStruct);                                           // Добавляем инфу об установленной плашке памяти
-        }                                                                                       // Кол-во элементов вектора обозначает кол-во установленных плашек ОЗУ
-    }
-};
-
-QString InfoWin::GetOsVersionNameQSysInfo(){//Версия ОС
+QString InfoWin::GetOsVersionNameQSysInfo(){ //Версия ОС
     return QSysInfo::prettyProductName();
 }
-// const char *InfoWin::GetOsVersionName(){ //Версия ОС
-//     if (IsWindows10OrGreater())
-//         return "Windows 10";
-//     if (IsWindows8Point1OrGreater())
-//         return "Windows 8.1";
-//     if (IsWindows8OrGreater())
-//         return "Windows 8";
-//     if (IsWindows7SP1OrGreater())
-//         return "Windows 7 SP1";
-//     if (IsWindows7OrGreater())
-//         return "Windows 7";
-//     if (IsWindowsVistaSP2OrGreater())
-//         return "Windows Vista SP2";
-//     if (IsWindowsVistaSP1OrGreater())
-//         return "Windows Vista SP1";
-//     if (IsWindowsVistaOrGreater())
-//         return "Windows Vista";
-//     if (IsWindowsXPSP3OrGreater())
-//         return "Windows XP SP3";
-//     if (IsWindowsXPSP2OrGreater())
-//         return "Windows XP SP2";
-//     if (IsWindowsXPSP1OrGreater())
-//         return "Windows XP SP1";
-//     if (IsWindowsXPOrGreater())
-//         return "Windows XP";
-//     if (IsWindowsServer())
-//         return "Windows Server"; //Потом исправить
-//     return "Unknown";
-// };
+// // const char *InfoWin::GetOsVersionName(){ //Версия ОС
+// //     if (IsWindows10OrGreater())
+// //         return "Windows 10";
+// //     if (IsWindows8Point1OrGreater())
+// //         return "Windows 8.1";
+// //     if (IsWindows8OrGreater())
+// //         return "Windows 8";
+// //     if (IsWindows7SP1OrGreater())
+// //         return "Windows 7 SP1";
+// //     if (IsWindows7OrGreater())
+// //         return "Windows 7";
+// //     if (IsWindowsVistaSP2OrGreater())
+// //         return "Windows Vista SP2";
+// //     if (IsWindowsVistaSP1OrGreater())
+// //         return "Windows Vista SP1";
+// //     if (IsWindowsVistaOrGreater())
+// //         return "Windows Vista";
+// //     if (IsWindowsXPSP3OrGreater())
+// //         return "Windows XP SP3";
+// //     if (IsWindowsXPSP2OrGreater())
+// //         return "Windows XP SP2";
+// //     if (IsWindowsXPSP1OrGreater())
+// //         return "Windows XP SP1";
+// //     if (IsWindowsXPOrGreater())
+// //         return "Windows XP";
+// //     if (IsWindowsServer())
+// //         return "Windows Server"; //Потом исправить
+// //     return "Unknown";
+// // };
 
 QString InfoWin::GetComputerName_(){ //Получить имя компьютера
     char buffer[MAX_COMPUTERNAME_LENGTH + 1] = ""; //Буфер для вывода имени компьютера
@@ -206,102 +209,102 @@ DWORD InfoWin::GetMemorySize(){ //Получить общий объём ОЗУ
 };
 
 
-QString InfoWin::GetGPUName(){ // Получить модель видеокарты
-    DISPLAY_DEVICE displayDevice;
-    displayDevice.cb = sizeof (DISPLAY_DEVICE);
+// QString InfoWin::GetGPUName(){ // Получить модель видеокарты
+//     DISPLAY_DEVICE displayDevice;
+//     displayDevice.cb = sizeof (DISPLAY_DEVICE);
 
-    DWORD deviceIndex = 0;
-       // while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
-       //     if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-       //         return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
-       //         //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-       //     } else{
-       //         //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-       //     }
-       //     deviceIndex++;
-       // }
-    //На разных компах по разному
-    while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
-        if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-            return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
-            //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-        } else{
-            //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-        }
-        deviceIndex++;
-    }
-    return "Undefined";
-};
+//     DWORD deviceIndex = 0;
+//        // while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
+//        //     if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+//        //         return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
+//        //         //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+//        //     } else{
+//        //         //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+//        //     }
+//        //     deviceIndex++;
+//        // }
+//     //На разных компах по разному
+//     while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
+//         if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+//             return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
+//             //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+//         } else{
+//             //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+//         }
+//         deviceIndex++;
+//     }
+//     return "Undefined";
+// };
 
-DWORD InfoWin::GetGPUMemSize(){ // Получить объём видеопамяти
-    IDXGIFactory* pFactory;
-    HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
-    if (FAILED(hr)){
-        //qDebug() << "Failed to create DXGI factory. Error code: " << hr;
-        return 0;
-    }
+// DWORD InfoWin::GetGPUMemSize(){ // Получить объём видеопамяти
+//     IDXGIFactory* pFactory;
+//     HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
+//     if (FAILED(hr)){
+//         //qDebug() << "Failed to create DXGI factory. Error code: " << hr;
+//         return 0;
+//     }
 
-    IDXGIAdapter* pAdapter;
-    hr = pFactory->EnumAdapters(0, &pAdapter);
-    if(FAILED(hr)){
-        //qDebug() << "Failed to enumerate DXGI adapters. Error code: " << hr;
-        return 0;
-        pFactory->Release();
-    }
-    DXGI_ADAPTER_DESC adapterDesc;
-    hr = pAdapter->GetDesc(&adapterDesc);
-    if(FAILED(hr)){
-        //qDebug() << "Failed to get DXGI adapter description. Error code: " << hr;
-        return 0;
-        pAdapter->Release();
-        pFactory->Release();
-    }
-    //qDebug() << "Video Memory: " <<adapterDesc.DedicatedVideoMemory / (1024 * 1024) << "MB";
-    return adapterDesc.DedicatedVideoMemory / (1024 * 1024);
-    pAdapter->Release();
-    pFactory->Release();
-};
+//     IDXGIAdapter* pAdapter;
+//     hr = pFactory->EnumAdapters(0, &pAdapter);
+//     if(FAILED(hr)){
+//         //qDebug() << "Failed to enumerate DXGI adapters. Error code: " << hr;
+//         return 0;
+//         pFactory->Release();
+//     }
+//     DXGI_ADAPTER_DESC adapterDesc;
+//     hr = pAdapter->GetDesc(&adapterDesc);
+//     if(FAILED(hr)){
+//         //qDebug() << "Failed to get DXGI adapter description. Error code: " << hr;
+//         return 0;
+//         pAdapter->Release();
+//         pFactory->Release();
+//     }
+//     //qDebug() << "Video Memory: " <<adapterDesc.DedicatedVideoMemory / (1024 * 1024) << "MB";
+//     return adapterDesc.DedicatedVideoMemory / (1024 * 1024);
+//     pAdapter->Release();
+//     pFactory->Release();
+// };
 
-bool InfoWin::GetCDROM(){ // Получить наличие дисковода
-    // Проходим по буквам дисков, начиная с 'A' и заканчивая 'Z'
-    for (char drive = 'A'; drive <= 'Z'; ++drive) {
-        // Формируем строку с именем диска
-        std::string rootPath = std::string("\\\\.\\") + drive + ":";
+// bool InfoWin::GetCDROM(){ // Получить наличие дисковода
+//     // Проходим по буквам дисков, начиная с 'A' и заканчивая 'Z'
+//     for (char drive = 'A'; drive <= 'Z'; ++drive) {
+//         // Формируем строку с именем диска
+//         std::string rootPath = std::string("\\\\.\\") + drive + ":";
 
-        // Получаем тип дискового устройства
-        UINT driveType = GetDriveTypeA(rootPath.c_str());
+//         // Получаем тип дискового устройства
+//         UINT driveType = GetDriveTypeA(rootPath.c_str());
 
-        // Проверяем, является ли диск CDROM'ом
-        if (driveType == DRIVE_CDROM) { // Если нашли CDROM
-            return true;
-        }
-    }
-    return false; // Если не нашли CDROM
-};
+//         // Проверяем, является ли диск CDROM'ом
+//         if (driveType == DRIVE_CDROM) { // Если нашли CDROM
+//             return true;
+//         }
+//     }
+//     return false; // Если не нашли CDROM
+// };
 
-//void InfoWin::GetMonitor() { // Получить инфу об мониторе
-//    HMONITOR hMonitor = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY); // Получаем список мониторов
-//    while (hMonitor != NULL) {
-//        // Получаем информацию о мониторе
-//        MONITORINFO monitorInfo;
-//        GetMonitorInfo(hMonitor, &monitorInfo);
+// //void InfoWin::GetMonitor() { // Получить инфу об мониторе
+// //    HMONITOR hMonitor = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY); // Получаем список мониторов
+// //    while (hMonitor != NULL) {
+// //        // Получаем информацию о мониторе
+// //        MONITORINFO monitorInfo;
+// //        GetMonitorInfo(hMonitor, &monitorInfo);
 
-//        // Сохраняем параметры монитора
-//        InfoWin::infoMonitors newStruct; // Создаём структуру для хранения данных
-//        newStruct.Name = monitorInfo.cbSize;
-////        std::cout << "Monitor name: " << monitorInfo.szDevice << std::endl;
-////        std::cout << "Size: " << monitorInfo.rcMonitor.right << " x " << monitorInfo.rcMonitor.bottom << std::endl;
-////        std::cout << "Position: " << monitorInfo.rcMonitor.left << ", " << monitorInfo.rcMonitor.top << std::endl;
-////        std::cout << "State: " << monitorInfo.dwFlags << std::endl;
-////        std::cout << "Type: " << monitorInfo.dmPosition << std::endl;
-////        std::cout << "Resolution: " << monitorInfo.dwWidth << " x " << monitorInfo.dwHeight << std::endl;
-////        std::cout << "Aspect ratio: " << monitorInfo.dmPelsWidth << " / " << monitorInfo.dmPelsHeight << std::endl;
-////        std::cout << "Vertical sync: " << (monitorInfo.dwFlags & VERTRES ? "enabled" : "disabled") << std::endl;
-////        std::cout << "Refresh rate: " << monitorInfo.dwRefreshRate << std::endl;
+// //        // Сохраняем параметры монитора
+// //        InfoWin::infoMonitors newStruct; // Создаём структуру для хранения данных
+// //        newStruct.Name = monitorInfo.cbSize;
+// ////        std::cout << "Monitor name: " << monitorInfo.szDevice << std::endl;
+// ////        std::cout << "Size: " << monitorInfo.rcMonitor.right << " x " << monitorInfo.rcMonitor.bottom << std::endl;
+// ////        std::cout << "Position: " << monitorInfo.rcMonitor.left << ", " << monitorInfo.rcMonitor.top << std::endl;
+// ////        std::cout << "State: " << monitorInfo.dwFlags << std::endl;
+// ////        std::cout << "Type: " << monitorInfo.dmPosition << std::endl;
+// ////        std::cout << "Resolution: " << monitorInfo.dwWidth << " x " << monitorInfo.dwHeight << std::endl;
+// ////        std::cout << "Aspect ratio: " << monitorInfo.dmPelsWidth << " / " << monitorInfo.dmPelsHeight << std::endl;
+// ////        std::cout << "Vertical sync: " << (monitorInfo.dwFlags & VERTRES ? "enabled" : "disabled") << std::endl;
+// ////        std::cout << "Refresh rate: " << monitorInfo.dwRefreshRate << std::endl;
 
-//        // Переходим к следующему монитору
-//        //hMonitor = MonitorNext(hMonitor);
-//    }
-//};
+// //        // Переходим к следующему монитору
+// //        //hMonitor = MonitorNext(hMonitor);
+// //    }
+// //};
 
 #endif

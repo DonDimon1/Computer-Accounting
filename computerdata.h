@@ -1,6 +1,6 @@
 #ifndef COMPUTERDATA_H
 #define COMPUTERDATA_H
-
+#pragma once
 //Окно карточки приложения. Открывается в новой вкладке основного окна
 #include <QWidget>
 #include <QStandardItemModel> //Для модели

@@ -1,6 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#pragma once
 //Основное окно приложения
 #include <QMainWindow>
 #include <QSqlDatabase> //Доступ к базе данных через соединение

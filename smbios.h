@@ -11,7 +11,6 @@ using UINT = unsigned int;
 // Временно определил _WIN32, на самом деле от ОС не зависит
 //#ifdef _WIN32 // Класс для сбора всей информации о комьютере в среде Windows
 // Класс для парсинга таблицы SMBIOS компьютера.
-#include "infoWin.h"
 #include <vector>
 #include <QString>
 
