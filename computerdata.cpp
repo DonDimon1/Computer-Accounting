@@ -160,20 +160,20 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("MotherboardManufacturer")), comp.GetBoardManufacturer()); // Получаем производителя Мат.Платы
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Videocard")), comp.GetGPUName()); // Получаем видеокарту
 //    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("videoMemory")), (int)comp.GetGPUMemSize()); // Получаем видеопамять
-//    QString RAMStr = ""; // Строка с параметрами ОЗУ
-//    QString typeDDRStr = ""; // Строка с типом ddr
-//    WORD numRAM = comp.vecMemory.size(); // Кол-во плашек памяти
-//    for(UINT i = 0; i < numRAM; ++i){ // Проходим по всем плашкам
-//        RAMStr += QString::number(i + 1) + ") " + comp.vecMemory[i].Manufacturer + " "; // Создаём строку вывода
-//        RAMStr += QString::number(comp.vecMemory[i].Size) + " Мб, ";
-//        if(!typeDDRStr.contains("DDR")) // Записываем тип DDR памяти
-//            typeDDRStr = comp.vecMemory[i].MemoryType;
-//    };
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAM")), RAMStr); // Получаем ОЗУ
+    QString RAMStr = ""; // Строка с параметрами ОЗУ
+    QString typeDDRStr = ""; // Строка с типом ddr
+    WORD numRAM = comp.vecMemory.size(); // Кол-во плашек памяти
+    for(UINT i = 0; i < numRAM; ++i){ // Проходим по всем плашкам
+        RAMStr += QString::number(i + 1) + ") " + comp.vecMemory[i].Manufacturer + " "; // Создаём строку вывода
+        RAMStr += QString::number(comp.vecMemory[i].Size) + " Мб, ";
+        if(!typeDDRStr.contains("DDR")) // Записываем тип DDR памяти
+            typeDDRStr = comp.vecMemory[i].MemoryType;
+    };
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAM")), RAMStr); // Получаем ОЗУ
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("RAMCapacity")), (int)comp.GetMemorySize()); // Получаем общее количество ОЗУ
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("typeDDR")), typeDDRStr); // Получаем тип DDR
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("TotalRAMSlots")), (int)comp.TotalRAMSlots); // Получаем Общее кол-во слотов
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CurrentRAMSlots")), (int)numRAM); // Получаем Общее кол-во слотов
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("typeDDR")), typeDDRStr); // Получаем тип DDR
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("TotalRAMSlots")), (int)comp.TotalRAMSlots); // Получаем Общее кол-во слотов
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CurrentRAMSlots")), (int)numRAM); // Получаем занятое кол-во слотов
 //    QString driveStr = ""; // Строка с дисками
 //    WORD numDrive = comp.vecDrive.size(); // Кол-во дисков
 //    WORD totalCapacityDrive = 0; // Общий объём всех дисков

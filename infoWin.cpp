@@ -54,21 +54,21 @@
 // };
 
 void InfoWin::DecodeSMBIOS(SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
-//     // ОЗУ
-//     WORD slotsNum = SMTable->vecMemory.size();                                                  // Кол-во разъёмов для памяти, найденных в SMBIOS
-//     InfoWin::TotalRAMSlots = slotsNum;                                                         // Сохраняем инфу о общем кол-ве разъёмов для памяти
-//     for(UINT i = 0; i < slotsNum; ++i){                                                         // Перебераем все плашки ОЗУ
-//         if(SMTable->vecMemory.at(i).Size){                                                      // Если плашка памяти установлена
-//             InfoWin::infoMemory newStruct;                                                     // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
-//             newStruct.Size = SMTable->vecMemory.at(i).Size;                                     // Сохраняем Объём плашки в МБ.
-//             newStruct.FormFactor = SMTable->GetFormFactor(SMTable->vecMemory.at(i).FormFactor); // Сохраняем Форм фактор плашки
-//             newStruct.DeviceLocator = SMTable->vecMemory.at(i).DeviceLocator;                   // В каокм слоте стоит плашка
-//             newStruct.MemoryType = SMTable->GetMemoryType(SMTable->vecMemory.at(i).MemoryType); // Сохраняем тип памяти
-//             newStruct.Speed = SMTable->vecMemory.at(i).Speed;                                   // Сохраняем скорость
-//             newStruct.Manufacturer = SMTable->vecMemory.at(i).Manufacturer;                     // Сохраняем производителя
-//             InfoWin::vecMemory.push_back(newStruct);                                           // Добавляем инфу об установленной плашке памяти
-//         }                                                                                       // Кол-во элементов вектора обозначает кол-во установленных плашек ОЗУ
-//     }
+    // ОЗУ
+    WORD slotsNum = SMTable->vecMemory.size();                                                  // Кол-во разъёмов для памяти, найденных в SMBIOS
+    InfoWin::TotalRAMSlots = slotsNum;                                                          // Сохраняем инфу о общем кол-ве разъёмов для памяти
+    for(UINT i = 0; i < slotsNum; ++i){                                                         // Перебераем все плашки ОЗУ
+        if(SMTable->vecMemory.at(i).Size){                                                      // Если плашка памяти установлена
+            InfoPlatform::infoMemory newStruct;                                                 // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
+            newStruct.Size = SMTable->vecMemory.at(i).Size;                                     // Сохраняем Объём плашки в МБ.
+            newStruct.FormFactor = SMTable->GetFormFactor(SMTable->vecMemory.at(i).FormFactor); // Сохраняем Форм фактор плашки
+            newStruct.DeviceLocator = SMTable->vecMemory.at(i).DeviceLocator;                   // В каокм слоте стоит плашка
+            newStruct.MemoryType = SMTable->GetMemoryType(SMTable->vecMemory.at(i).MemoryType); // Сохраняем тип памяти
+            newStruct.Speed = SMTable->vecMemory.at(i).Speed;                                   // Сохраняем скорость
+            newStruct.Manufacturer = SMTable->vecMemory.at(i).Manufacturer;                     // Сохраняем производителя
+            InfoWin::vecMemory.push_back(newStruct);                                            // Добавляем инфу об установленной плашке памяти
+        }                                                                                       // Кол-во элементов вектора обозначает кол-во установленных плашек ОЗУ
+    }
 };
 
 QString InfoWin::GetOsVersionNameQSysInfo(){ //Версия ОС

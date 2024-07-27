@@ -29,7 +29,6 @@ public:
     //Информация о ОЗУ
     DWORD GetMemorySize() override;              // Общий объём оперативной памяти.
 
-    // std::vector<infoMemory> vecMemory;  // Информация обо всех плашках ОЗУ
     // //Информация о Видеокарте
     // QString GetGPUName();               // Получить модель видеокарты
     // DWORD GetGPUMemSize();              // Получить объём видеопамяти видеокарты
@@ -47,10 +46,10 @@ public:
     //ОЗУ
     WORD TotalRAMSlots;                     // Общее кол-во разъёмов для памяти
     std::vector<InfoPlatform::infoMemory> vecMemory;      // Информация обо всех плашках ОЗУ
-    // //DiskInfoLin
+    // //Диск
     // struct infoHardDrive;                   // Структура информации о конкретном жёстком диске(или ссд).
     // std::vector<infoHardDrive> vecDrive;    // Информация обо всех физических дисках
-    // //Monitor
+    // //Монитор
     // struct infoMonitors;                    // Структура Информации о конкретном мониторе
     // std::vector<infoMonitors> vecMonitors;  // Информация обо всех плашках мониторах
 private:

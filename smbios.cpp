@@ -18,7 +18,7 @@ QString BYTEtoSTRING(BYTE **ptrStr); // Определяем функцию дл
 
 SMBIOS::SMBIOS() //Конструктор
 {
-    //compInfo::SMBIOS::ReadSMBIOS(); //Функция чтения таблицы SMBIOS
+    SMBIOS::ReadSMBIOS(); //Функция чтения таблицы SMBIOS
 }
 
 
@@ -120,9 +120,12 @@ void SMBIOS::ReadSMBIOS(){ //Чтение таблицы из БИОСа
         // Получаем версию SMBIOS
         int version = smBiosData->SMBIOSMajorVersion << 8 | smBiosData->SMBIOSMinorVersion;
 
+        BYTE *ptrByte = smBiosData->SMBIOSTableData;        // Указатель на первый байт таблицы
+        BYTE *ptrStr = smBiosData->SMBIOSTableData;         // Указатель на строки в структурах таблицы SMBIOS
+
     #elif __linux__ // Реализация для Linux
         // Получаем версию SMBIOS
-        float version{};
+        int version{};
         QFile smbiosEntryPointFile("/sys/firmware/dmi/tables/smbios_entry_point");
         if (!smbiosEntryPointFile.open(QIODevice::ReadOnly)) {        // Попытка открыть файл
             qCritical() << "Нет прав для открытия файла /sys/firmware/dmi/tables/smbios_entry_point. Запустите программу с правами администратора (root).";
@@ -139,11 +142,17 @@ void SMBIOS::ReadSMBIOS(){ //Чтение таблицы из БИОСа
         // }
 
         //Узнаем версию таблицы SMBIOS
-        GetOsBitWidth() == "x32" ? verByte += 5 : verByte += 6; // Место данных разное, в зависимости от разрядности.
+        #if defined(__LP64__) || defined(_M_IA64) // Место данных разное, в зависимости от разрядности.
+            verByte += 6;
+        #else
+            verByte += 5
+        #endif
+
         version = *verByte;                     // Сохраняем целую часть
         ++verByte;                              // Переходим на место дробной части числа версии
-        char fractionalPart = *verByte;         // Сохраняем дробную часть
-        version += (fractionalPart / 10.0f);    // Получаем версию таблицы SMBIOS
+        char minor = *verByte;         // Сохраняем дробную часть
+        //version += (fractionalPart / 10.0f);    // Получаем версию таблицы SMBIOS
+        version = (version << 8) | minor;
 
         // Получаем данные из таблицы SMBIOS
         QFile smbiosFile("/sys/firmware/dmi/tables/DMI");   // Путь к данным из таблицы SMBIOS в Linux
@@ -160,14 +169,11 @@ void SMBIOS::ReadSMBIOS(){ //Чтение таблицы из БИОСа
     #endif
 
     // Далее нужен код для обработки данных SMBIOS и освобождение памяти под меткой выхода
-    BYTE *ptrByte = smBiosData->SMBIOSTableData;        // Указатель на первый байт таблицы
-    BYTE *ptrStr = smBiosData->SMBIOSTableData;         // Указатель на строки в структурах таблицы SMBIOS
     while(*ptrStr != TYPE_END_OF_TABLE){                // Обработка каждого байта в таблице SMBIOS
         ptrByte = ptrStr;                               // Переход на следующую структуру
         switch (*ptrByte) {                             // Ищем в байтах структуры
             case TYPE_MEMORY_DEVICE:{                   // Парсим инфу об ОЗУ
                 SMBIOS::SMInfoMemory thisMemory; // Создаём новую структуру с необработанными данными про конкретную плашку ОЗУ
-                //compInfo::infoMemory newStruct;
                 //newStruct.Size = BYTEtoWORD(&ptrByte);
                 ++ptrByte;                              // Подготовка к считыванию данных
                 ptrStr = ptrByte + *ptrByte - 1; ptrByte += 3; // Ставим оба указателя на свои места
