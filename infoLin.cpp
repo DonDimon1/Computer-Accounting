@@ -1,6 +1,13 @@
 #ifdef __linux__
 
 #include "infoLin.h"
+#include <sys/utsname.h> // Для определения имени пк TODO сделать всё через boost
+#include <unistd.h>     // Для определения имени пользователя
+#include <fstream>      // Для парсинга иныормации о процессоре
+#include <string>
+#include <QSysInfo>     // Для определения архитектуры процессора
+#include <sstream>      // Из std::string в DWORD
+//
  #include <QDebug>
 // Для DecodeSMBIOS
 #include <QFile>        //Какие то из них не нужны
@@ -8,13 +15,30 @@
 #include <QVector>
 #include <QByteArray>
 //
-//#include <fstream>
-//#include <vector>
-//
 
-InfoLin::InfoLin(){
-    InfoLin::DecodeSMBIOS(); // Заполняем данные о плашках ОЗУ
-} // Конструктор
+
+InfoLin::InfoLin(){                     // Конструктор
+    SMBIOS SMTable;                     // Класс для содержания необработанной инфы из SMBIOS
+    //InfoLin::DecodeSMBIOS(&SMTable);    // Расшифровать информацию из таблицы SMBIOS
+}
+
+void InfoLin::DecodeSMBIOS(SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
+    // ОЗУ
+    // WORD slotsNum = SMTable->vecMemory.size();                                                  // Кол-во разъёмов для памяти, найденных в SMBIOS
+    // InfoLin::TotalRAMSlots = slotsNum;                                                         // Сохраняем инфу о общем кол-ве разъёмов для памяти
+    // for(UINT i = 0; i < slotsNum; ++i){                                                         // Перебераем все плашки ОЗУ
+    //     if(SMTable->vecMemory.at(i).Size){                                                      // Если плашка памяти установлена
+    //         InfoPlatform::infoMemory newStruct;                                                     // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
+    //         newStruct.Size = SMTable->vecMemory.at(i).Size;                                     // Сохраняем Объём плашки в МБ.
+    //         newStruct.FormFactor = SMTable->GetFormFactor(SMTable->vecMemory.at(i).FormFactor); // Сохраняем Форм фактор плашки
+    //         newStruct.DeviceLocator = SMTable->vecMemory.at(i).DeviceLocator;                   // В каокм слоте стоит плашка
+    //         newStruct.MemoryType = SMTable->GetMemoryType(SMTable->vecMemory.at(i).MemoryType); // Сохраняем тип памяти
+    //         newStruct.Speed = SMTable->vecMemory.at(i).Speed;                                   // Сохраняем скорость
+    //         newStruct.Manufacturer = SMTable->vecMemory.at(i).Manufacturer;                     // Сохраняем производителя
+    //         InfoLin::vecMemory.push_back(newStruct);                                           // Добавляем инфу об установленной плашке памяти
+    //     }                                                                                       // Кол-во элементов вектора обозначает кол-во установленных плашек ОЗУ
+    // }
+};
 
 QString InfoLin::GetOsVersionNameQSysInfo(){ //Версия ОС
     return QSysInfo::prettyProductName();
@@ -165,18 +189,18 @@ DWORD InfoLin::GetMemorySize(){ //Получить общий объём ОЗУ
     return 0;
 };
 
-// Временно!
-QString BYTEtoSTRING(BYTE **ptrStr){ // Конвертации из нескольких BYTE в одну строку
-    QString res;
-    while(**ptrStr){
-        res += (char)**ptrStr;
-        ++(*ptrStr);
-    }
-    ++(*ptrStr);
-    return res;
-};
+// // Временно!
+// QString BYTEtoSTRING(BYTE **ptrStr){ // Конвертации из нескольких BYTE в одну строку
+//     QString res;
+//     while(**ptrStr){
+//         res += (char)**ptrStr;
+//         ++(*ptrStr);
+//     }
+//     ++(*ptrStr);
+//     return res;
+// };
 
-void InfoLin::DecodeSMBIOS(){
+void InfoLin::DecodeSMBIOS_2(){
     // // Получаем версию SMBIOS
     // const char* pathEPS = "/sys/firmware/dmi/tables/smbios_entry_point";
     // std::ifstream fileEPS(pathEPS, std::ios::binary);
@@ -263,7 +287,7 @@ void InfoLin::DecodeSMBIOS(){
         //BYTE length = *ptrByte + 1; // Узнаём длину структуры без строк
         switch (*ptrByte) {
         case 17: {
-            InfoLin::infoMemory module;
+            InfoPlatform::infoMemory module;
             ++ptrByte;                                      // Подготовка к считыванию данных
             ptrStr = ptrByte + *ptrByte - 1; ptrByte += 3;  // Ставим оба указателя на свои места
             if(version >= 2.0){              // Версия 2.0
@@ -274,8 +298,8 @@ void InfoLin::DecodeSMBIOS(){
                 ptrByte += 2; // Size
                 ptrByte += 2; // FormFactor // Присваеваем значение и переходим к следующему байту
                 ptrByte += 2; // DeviceSet
-                QString temp = BYTEtoSTRING(&ptrStr); ptrByte++; // Здесь начинается первая строка
-                temp = BYTEtoSTRING(&ptrStr); ptrByte++;
+                //QString temp = BYTEtoSTRING(&ptrStr); ptrByte++; // Здесь начинается первая строка
+                //temp = BYTEtoSTRING(&ptrStr); ptrByte++;
                 ptrByte++;    // MemoryType
                 ptrByte += 2; // TypeDetail
             } else {InfoLin::vecMemory.push_back(module); break;} // Сохраняем данные и выходим из case

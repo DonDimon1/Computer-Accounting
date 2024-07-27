@@ -32,6 +32,8 @@ set(PROJECT_SOURCES
        infoLin.cpp
        smbios.h
        smbios.cpp
+       infoPlatform.h
+       infoPlatform.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -86,7 +88,7 @@ include(GNUInstallDirs)
 #                     mainWindow.cpp mainWindow.h mainWindow.ui
 #                     computerdata.h computerdata.cpp computerdata.ui
 #               )
-# ADD_EXECUTABLE(windows infoWin.h infoWin.cpp)
+# ADD_EXECUTABLE(Info infoWin.h infoWin.cpp infoLin.h infoLin.cpp)
 # ADD_EXECUTABLE(linux infoLin.h infoLin.cpp)
 # ADD_EXECUTABLE(smbios smbios.h smbios.cpp)
 

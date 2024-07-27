@@ -1,8 +1,0 @@
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/ComputerAccounting.dir
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/edit_cache.dir
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/rebuild_cache.dir
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/list_install_components.dir
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/install.dir
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/install/local.dir
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/install/strip.dir
-/home/admin/QT_Project/Computer-Accounting/build/Qt_5_15_13-Debug/CMakeFiles/ComputerAccounting_autogen.dir

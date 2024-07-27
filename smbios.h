@@ -1,12 +1,21 @@
 #ifndef SMBIOS_H
 #define SMBIOS_H
 
+// Псевдонимы
+using BYTE = unsigned char;         // 1 байт (8 бит)
+using WORD = unsigned short;        // 2 байта (16 бит)
+using DWORD = unsigned long;        // 4 байта (32 бита)
+using QWORD = unsigned long long;   // 8 байт (64 бита)
+using UINT = unsigned int;
+
 // Временно определил _WIN32, на самом деле от ОС не зависит
-#ifdef _WIN32 // Класс для сбора всей информации о комьютере в среде Windows
+//#ifdef _WIN32 // Класс для сбора всей информации о комьютере в среде Windows
 // Класс для парсинга таблицы SMBIOS компьютера.
 #include "infoWin.h"
+#include <vector>
+#include <QString>
 
-class InfoWin::SMBIOS
+class SMBIOS
 {
 public:
     SMBIOS();
@@ -20,7 +29,7 @@ public:
 };
 
 const static int TYPE_MEMORY_DEVICE = 17;   // Номер типа ОЗУ в таблице SMBIOS
-struct compInfo::SMBIOS::SMInfoMemory{      // Определение структуры ОЗУ
+struct SMBIOS::SMInfoMemory{      // Определение структуры ОЗУ
     // 2.1+
     WORD PhysicalArrayHandle;
     WORD ErrorInformationHandle;
@@ -72,6 +81,6 @@ struct compInfo::SMBIOS::SMInfoMemory{      // Определение струк
 
 const static int TYPE_END_OF_TABLE = 127;
 
-#endif
+//#endif
 
 #endif // SMBIOS_H
