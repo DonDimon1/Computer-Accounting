@@ -26,20 +26,20 @@ public:
     QString GetBoardName() override;                // Получить название мат.платы.
     //Информация о ОЗУ
     DWORD GetMemorySize() override;                 // Общий объём оперативной памяти.
-    //WORD TotalRAMSlots;                           // Общее кол-во разъёмов для памяти
-    // struct InfoPlatform::infoMemory g;           // Структура информации о конкретной плашки памяти.
-    // std::vector<infoMemory> vecMemory;           // Информация обо всех плашках ОЗУ
-
-    // Временно!
-    void DecodeSMBIOS_2();
+    //Информация о Видеокарте
+    QString GetGPUName() override;                  // Получить модель видеокарты
+    DWORD GetGPUMemSize() override;                 // Получить объём видеопамяти видеокарты
+    //Информация о жёстких дисках
+    void GetHardDriveInfo() override;               // Получить информацию о физических дисках
+    //Информация о дисководе
+    bool GetCDROM() override;
 
     //ОЗУ
      WORD TotalRAMSlots;                                // Общее кол-во разъёмов для памяти
     // struct infoMemory;                               // Структура информации о конкретной плашки памяти.
      std::vector<InfoPlatform::infoMemory> vecMemory;   // Информация обо всех плашках ОЗУ
-    // //DiskInfoLin
-    // struct infoHardDrive;                            // Структура информации о конкретном жёстком диске(или ссд).
-    // std::vector<infoHardDrive> vecDrive;             // Информация обо всех физических дисках
+    //Дису
+    std::vector<infoHardDrive> vecDrive;             // Информация обо всех физических дисках
     // //Monitor
     // struct infoMonitors;                             // Структура Информации о конкретном мониторе
     // std::vector<infoMonitors> vecMonitors;           // Информация обо всех плашках мониторах

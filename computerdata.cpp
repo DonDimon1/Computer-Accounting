@@ -158,8 +158,8 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberCPUCores")), (int)comp.GetCPUNumberCore()); // Получаем кол-во ядер
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Motherboard")), comp.GetBoardName()); // Получаем Мат.Плату
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("MotherboardManufacturer")), comp.GetBoardManufacturer()); // Получаем производителя Мат.Платы
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Videocard")), comp.GetGPUName()); // Получаем видеокарту
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("videoMemory")), (int)comp.GetGPUMemSize()); // Получаем видеопамять
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Videocard")), comp.GetGPUName()); // Получаем видеокарту
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("videoMemory")), (int)comp.GetGPUMemSize()); // Получаем видеопамять
     QString RAMStr = ""; // Строка с параметрами ОЗУ
     QString typeDDRStr = ""; // Строка с типом ddr
     WORD numRAM = comp.vecMemory.size(); // Кол-во плашек памяти
@@ -174,21 +174,21 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("typeDDR")), typeDDRStr); // Получаем тип DDR
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("TotalRAMSlots")), (int)comp.TotalRAMSlots); // Получаем Общее кол-во слотов
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CurrentRAMSlots")), (int)numRAM); // Получаем занятое кол-во слотов
-//    QString driveStr = ""; // Строка с дисками
-//    WORD numDrive = comp.vecDrive.size(); // Кол-во дисков
-//    WORD totalCapacityDrive = 0; // Общий объём всех дисков
-//    for (UINT i = 0; i < numDrive; ++i) { // Проходим по всем дискам
-//        driveStr += QString::number(i + 1) + ") " + comp.vecDrive[i].Name + " "; // Создаём строку вывода
-//        driveStr += QString::number(comp.vecDrive[i].Size) + " Гб, ";
-//        totalCapacityDrive += comp.vecDrive[i].Size;                        // Общий объём всех дисков
-//    }
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("HDDSDD")), driveStr); // Получаем HDD & SSD
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("ROMcapacity")), (int)totalCapacityDrive); // Получаем общий объём дисков QString::number(totalCapacityDrive) + " Гб"
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberOfPhysicalDisks")), (int)numDrive); // Получаем кол-во дисков
-//    QString cdROM = "Нет"; // Строка CDROM
-//    if(comp.GetCDROM())
-//        cdROM = "Есть"; // Обработка наличия CDROM
-//    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("diskDrive")), cdROM); // Получить наличие дисковода cdROM.toLatin1()
+    QString driveStr = ""; // Строка с дисками
+    WORD numDrive = comp.vecDrive.size(); // Кол-во дисков
+    WORD totalCapacityDrive = 0; // Общий объём всех дисков
+    for (UINT i = 0; i < numDrive; ++i) { // Проходим по всем дискам
+        driveStr += QString::number(i + 1) + ") " + comp.vecDrive[i].Name + " "; // Создаём строку вывода
+        driveStr += QString::number(comp.vecDrive[i].Size) + " Гб, ";
+        totalCapacityDrive += comp.vecDrive[i].Size;                        // Общий объём всех дисков
+    }
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("HDDSDD")), driveStr); // Получаем HDD & SSD
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("ROMcapacity")), (int)totalCapacityDrive); // Получаем общий объём дисков QString::number(totalCapacityDrive) + " Гб"
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberOfPhysicalDisks")), (int)numDrive); // Получаем кол-во дисков
+    QString cdROM = "Нет"; // Строка CDROM
+    if(comp.GetCDROM())
+        cdROM = "Есть"; // Обработка наличия CDROM
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("diskDrive")), cdROM); // Получить наличие дисковода cdROM.toLatin1()
 
     ui->tableViewBottom_2->setModel(hardware); // Устанавливаем второй таблице модель Hardware
     ui->tableViewBottom_2->setColumnHidden(hardware->fieldIndex("ID"), true); // Скрываем колонку с ID

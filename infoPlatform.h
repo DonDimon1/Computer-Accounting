@@ -28,12 +28,12 @@ public:
     //Информация о ОЗУ
     virtual DWORD GetMemorySize() = 0;              // Общий объём оперативной памяти.
     //Информация о Видеокарте
-    //virtual QString GetGPUName() = 0;               // Получить модель видеокарты
-    //virtual DWORD GetGPUMemSize() = 0;              // Получить объём видеопамяти видеокарты
+    virtual QString GetGPUName() = 0;               // Получить модель видеокарты
+    virtual DWORD GetGPUMemSize() = 0;              // Получить объём видеопамяти видеокарты
     //Информация о жёстких дисках
-    //virtual void GetHardDriveInfo() = 0;            // Получить информацию о физических дисках
+    virtual void GetHardDriveInfo() = 0;            // Получить информацию о физических дисках
     //Информация о дисководе
-    //virtual bool GetCDROM() = 0;
+    virtual bool GetCDROM() = 0;
     //Информация о мониторах
     //void GetMonitor();                            // Получить информацию о мониторе
 

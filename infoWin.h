@@ -28,27 +28,25 @@ public:
     QString GetBoardName() override;             // Получить название мат.платы.
     //Информация о ОЗУ
     DWORD GetMemorySize() override;              // Общий объём оперативной памяти.
-
     // //Информация о Видеокарте
-    // QString GetGPUName();               // Получить модель видеокарты
-    // DWORD GetGPUMemSize();              // Получить объём видеопамяти видеокарты
-    // //Информация о жёстких дисках
-    // void GetHardDriveInfo();            // Получить информацию о физических дисках
-    // struct infoHardDrive;               // Структура информации о конкретном жёстком диске(или ссд).
-    // std::vector<infoHardDrive> vecDrive;// Информация обо всех физических дисках
-    // //Информация о дисководе
-    // bool GetCDROM();
+    QString GetGPUName() override;               // Получить модель видеокарты
+    DWORD GetGPUMemSize() override;              // Получить объём видеопамяти видеокарты
+    //Информация о жёстких дисках
+    void GetHardDriveInfo() override;            // Получить информацию о физических дисках
+    //Информация о дисководе
+    bool GetCDROM() override;
+
+
     // //Информация о мониторах
-    // //void GetMonitor();                  // Получить информацию о мониторе
+    // //void GetMonitor() override;                  // Получить информацию о мониторе
     // struct infoMonitors;                // Структура Информации о конкретном мониторе
     // std::vector<infoMonitors> vecMonitors; // Информация обо всех плашках мониторах
 
     //ОЗУ
     WORD TotalRAMSlots;                     // Общее кол-во разъёмов для памяти
     std::vector<InfoPlatform::infoMemory> vecMemory;      // Информация обо всех плашках ОЗУ
-    // //Диск
-    // struct infoHardDrive;                   // Структура информации о конкретном жёстком диске(или ссд).
-    // std::vector<infoHardDrive> vecDrive;    // Информация обо всех физических дисках
+    //Диск
+    std::vector<InfoPlatform::infoHardDrive> vecDrive;    // Информация обо всех физических дисках
     // //Монитор
     // struct infoMonitors;                    // Структура Информации о конкретном мониторе
     // std::vector<infoMonitors> vecMonitors;  // Информация обо всех плашках мониторах

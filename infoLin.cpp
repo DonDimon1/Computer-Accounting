@@ -10,16 +10,19 @@
 //
  #include <QDebug>
 // Для DecodeSMBIOS
-#include <QFile>        //Какие то из них не нужны
-#include <QTextStream>
-#include <QVector>
+#include <QFile>
 #include <QByteArray>
-//
+// Для определения модели Видеокарты
+#include <QProcess>
+#include <QStringList>
+// Для определения CDROM
+#include <QDir>
 
 
 InfoLin::InfoLin(){                     // Конструктор
     SMBIOS SMTable;                     // Класс для содержания необработанной инфы из SMBIOS
-    //InfoLin::DecodeSMBIOS(&SMTable);    // Расшифровать информацию из таблицы SMBIOS
+    InfoLin::DecodeSMBIOS(&SMTable);    // Расшифровать информацию из таблицы SMBIOS
+    InfoLin::GetHardDriveInfo();        // Функцию для чтения информации про жёсткие диски
 }
 
 void InfoLin::DecodeSMBIOS(SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
@@ -189,192 +192,110 @@ DWORD InfoLin::GetMemorySize(){ //Получить общий объём ОЗУ
     return 0;
 };
 
-// // Временно!
-// QString BYTEtoSTRING(BYTE **ptrStr){ // Конвертации из нескольких BYTE в одну строку
-//     QString res;
-//     while(**ptrStr){
-//         res += (char)**ptrStr;
-//         ++(*ptrStr);
-//     }
-//     ++(*ptrStr);
-//     return res;
-// };
+QString InfoLin::GetGPUName() { // Получить модель видеокарты
+    //QString cmd = "sh -c \"lspci | grep -E \"VGA|3D\"\"";
+    //QString cmd = "lspci | grep -E \"VGA|3D\"";
+    QString cmd = "lshw -c video";
+    QProcess process;
+    process.start(cmd);
+    process.waitForFinished();          // TODO: вызыв консоли тормозит программу. Либо обойтись без вызова, либо закинуть это в отдельный поток
+    process.waitForReadyRead();
+    QString output = process.readAllStandardOutput(); // Вывод консольной команды
 
-void InfoLin::DecodeSMBIOS_2(){
-    // // Получаем версию SMBIOS
-    // const char* pathEPS = "/sys/firmware/dmi/tables/smbios_entry_point";
-    // std::ifstream fileEPS(pathEPS, std::ios::binary);
-
-    // if (!fileEPS.is_open()) {
-    //     qCritical() << "Нет прав для открытия файла " << pathEPS << ". Запустите программу с правами администратора (root).";
-    //     return;
-    // }
-
-    // // Получаем размер файла
-    // fileEPS.seekg(0, std::ios::end);
-    // std::streampos fileEpsSize = fileEPS.tellg();
-    // fileEPS.seekg(0, std::ios::beg);
-
-    // // Считываем содержимое файла в буфер
-    // std::vector<BYTE> bufferEPS(fileEpsSize);
-    // if (!fileEPS.read(reinterpret_cast<char*>(bufferEPS.data()), fileEpsSize)) {
-    //     qCritical() << "Ошибка при чтении файла " << pathEPS;
-    //     return;
-    // }
-    // fileEPS.close();
-
-    // BYTE majorVersionIndex{};
-    // if(GetOsBitWidth() == "x32") // Место данных разное, в зависимости от разрядности.
-    //     majorVersionIndex = 5;
-    // else
-    //     majorVersionIndex = 6;
-    // float version = bufferEPS.at(majorVersionIndex);
-    // char fractionalPart = bufferEPS.at(majorVersionIndex + 2);
-    // version += (fractionalPart / 10.0f);    // Получаем версию таблицы SMBIOS
-    // qCritical() << version;
-    /////////////////////////////
-    // Получаем версию SMBIOS
-    float version{};
-    QFile smbiosEntryPointFile("/sys/firmware/dmi/tables/smbios_entry_point");
-    if (!smbiosEntryPointFile.open(QIODevice::ReadOnly)) {        // Попытка открыть файл
-        qCritical() << "Нет прав для открытия файла /sys/firmware/dmi/tables/smbios_entry_point. Запустите программу с правами администратора (root).";
-        return;
+    if(output.isEmpty()){
+        qCritical() << "Не удалось получить модель видеокарты. Попробуйте запустить программу с правами суперпользователя (root), либо обновите пакет lshw.";
+        qCritical() << process.readAllStandardError();
+        process.close();
+        return "undefine";
     }
-    QByteArray bufferEPS = smbiosEntryPointFile.readAll();        // Считываем информацию из файла
-    smbiosEntryPointFile.close();                                 // Закрываем файл
+    process.close();
 
-    const BYTE *verByte = reinterpret_cast<const BYTE*>(bufferEPS.data()); // Указатель на первый байт таблицы
+    QStringList stringList = output.split('\n', Qt::SkipEmptyParts); // Разделяем строку на несколько строк для удобства
+    const std::vector<QString> search = {"product:", "vendor:", "version:"};
+    std::vector<QString> vecValue; //{QString product, QString vendor, QString version};
 
-    // qCritical() << "Первые 10 байтов:";
-    // for (int i = 0; i < qMin(20, bufferEPS.size()); ++i) {
-    //     qCritical() << QString::number(verByte[i], 16).rightJustified(2, '0');
-    // }
-
-    //Узнаем версию таблицы SMBIOS
-    GetOsBitWidth() == "x32" ? verByte += 5 : verByte += 6; // Место данных разное, в зависимости от разрядности.
-    version = *verByte;                     // Сохраняем целую часть
-    ++verByte;                              // Переходим на место дробной части числа версии
-    char fractionalPart = *verByte;         // Сохраняем дробную часть
-    version += (fractionalPart / 10.0f);    // Получаем версию таблицы SMBIOS
-
-    //qCritical() << version;
-
-
-////////////////////////////////////////////
-    // Получаем данные из таблицы SMBIOS
-    QFile smbiosFile("/sys/firmware/dmi/tables/DMI");   // Путь к данным из таблицы SMBIOS в Linux
-    if (!smbiosFile.open(QIODevice::ReadOnly)) {        // Попытка открыть файл
-        qCritical() << "Нет прав для открытия файла /sys/firmware/dmi/tables/DMI. Запустите программу с правами администратора (root).";
-        return;
-    }
-
-    QByteArray buffer = smbiosFile.readAll();           // Считываем информацию из файла
-    smbiosFile.close();                                 // Закрываем файл
-
-    BYTE *ptrByte = reinterpret_cast<BYTE*>(buffer.data()); // Указатель на первый байт таблицы
-    BYTE *ptrStr = ptrByte;                       // Указатель на строки в структурах таблицы SMBIOS
-
-    // qCritical() << "Файл успешно прочитан. Размер:" << buffer.size() << "байт";
-    // qCritical() << "Первые 10 байтов:";
-    // for (int i = 0; i < qMin(20, buffer.size()); ++i) {
-    //     qCritical() << QString::number(ptrByte[i], 16).rightJustified(2, '0');
-    // }
-
-    // Простое парсирование: нахождение таблиц памяти
-
-    while (*ptrStr != 127) { // Обработка каждого байта в таблице SMBIOS
-        ptrByte = ptrStr;             // Переход на следующую структуру
-        //BYTE length = *ptrByte + 1; // Узнаём длину структуры без строк
-        switch (*ptrByte) {
-        case 17: {
-            InfoPlatform::infoMemory module;
-            ++ptrByte;                                      // Подготовка к считыванию данных
-            ptrStr = ptrByte + *ptrByte - 1; ptrByte += 3;  // Ставим оба указателя на свои места
-            if(version >= 2.0){              // Версия 2.0
-                ptrByte += 2; //PhysicalArrayHandle // Делаем из двух BYTE один WORD. И переходим на след. параметр
-                ptrByte += 2; // ErrorInformationHandle
-                ptrByte += 2; // TotalWidth
-                ptrByte += 2; // DataWidth
-                ptrByte += 2; // Size
-                ptrByte += 2; // FormFactor // Присваеваем значение и переходим к следующему байту
-                ptrByte += 2; // DeviceSet
-                //QString temp = BYTEtoSTRING(&ptrStr); ptrByte++; // Здесь начинается первая строка
-                //temp = BYTEtoSTRING(&ptrStr); ptrByte++;
-                ptrByte++;    // MemoryType
-                ptrByte += 2; // TypeDetail
-            } else {InfoLin::vecMemory.push_back(module); break;} // Сохраняем данные и выходим из case
-            break;}
-        case 127: {return;}
-        default:                // Обработка ненужных нам типов.
-            ptrByte++;                              // Ставим указатель на бит, определяющий длинну конкретного типа в таблице.
-            ptrStr = ptrByte + *ptrByte - 1;       // Переходим к строковым типам.
-            bool endString = false;                 // Переменная для определения конца строк
-            while(*ptrStr != 0 || !endString){     // Пока не будет найден конец всех строк (Цикл в цикле. Нужана оптимизация)
-                if(!*ptrStr)
-                    endString = true;
-                else
-                    endString = false;
-                ptrStr++;                          // Переход на следующий бит
-            }
-            ptrStr++;                              // Переход на следующий бит
-            // ptrByte += length;   // Переходим к строковым типам.
-            // while (ptrByte < buffer.size() && buffer[ptrByte] == 0) { // Пока не будет найден конец всех строк (Цикл в цикле. Нужана оптимизация)
-            //     ptrByte++;
-            // }
-            break;
+    int keyWordIndex = 0;
+    for(const QString &line : stringList){ // Поиск по всем строкам
+        if(line.contains(search.at(keyWordIndex))){     // Если ключевое слово найдено
+            //foundValue = line.trimmed(); // Сохраняем значение (Модель отдельно)
+            QString foundValue = line.trimmed();
+            foundValue.remove(search.at(keyWordIndex)); // Удаляем ключевое слово из строки
+            vecValue.push_back(foundValue);             // Сохраняем строку
+            if(++keyWordIndex >= search.size())         // Проверка на наличие строк
+                break;
         }
     }
+    return vecValue.at(1) + " " + vecValue.at(0) + " version:" + vecValue.at(2); // Выводим значения в нужном порядке
+}
 
-    // while (offset < smbiosData.size()) {
-    //     quint8 type = static_cast<quint8>(smbiosData[offset]);
-    //     quint8 length = static_cast<quint8>(smbiosData[offset + 1]);
-    //     quint16 handle = *reinterpret_cast<quint16*>(smbiosData.data() + offset + 2);
+DWORD InfoLin::GetGPUMemSize() {              // Получить объём видеопамяти видеокарты
+    // TODO: Пока не реализовано
+    return 0;
+}
 
-    //     if (type == 17) { // 17 - Тип записи для Memory Device
-    //         InfoLin::infoMemory module;
-    //         module.Size = static_cast<int>(smbiosData[offset + 12]) * 1024; // Size in KB
-    //         qCritical() << module.Size;
-    //         module.FormFactor = QString::number(static_cast<int>(smbiosData[offset + 21]));
-    //         module.MemoryType = QString::number(static_cast<int>(smbiosData[offset + 22]));
+void InfoLin::GetHardDriveInfo() { // Получить информацию о физических дисках
+    // TODO: вызыв консоли тормозит программу. Либо обойтись без вызова, либо закинуть это в отдельный поток
+    //hdparm -I /dev/sda
+    //ls -lF /dev/disk/by-id/
+    QProcess process;
+    process.start("lsblk -o NAME,SIZE,TYPE --noheadings");  // Получаем список всех дисков
+    process.waitForFinished();
+    process.waitForReadyRead();
+    QString output = process.readAllStandardOutput();
 
-    //         // Пример получения строки производителя (строковые индексы начинаются с 1)
-    //         int manufacturerIdx = static_cast<int>(smbiosData[offset + 17]);
-    //         int partNumberIdx = static_cast<int>(smbiosData[offset + 20]);
-    //         int serialNumberIdx = static_cast<int>(smbiosData[offset + 18]);
-    //         int assetTagIdx = static_cast<int>(smbiosData[offset + 19]);
+    if(output.isEmpty()){
+        qCritical() << "Не удалось получить информацию о количестве физических дисков с помощью lsblk.";
+        return;
+    }
 
-    //         // Поиск строковых данных
-    //         int stringStart = offset + length;
-    //         int stringOffset = stringStart;
-    //         int currentStringIdx = 1;
+    QStringList stringList = output.split("\n", Qt::SkipEmptyParts);                            // Разбиваем список на строки
 
-    //         // while (stringOffset < smbiosData.size() && smbiosData[stringOffset] != 0) {
-    //         //     if (currentStringIdx == manufacturerIdx) {
-    //         //         module.manufacturer = QString::fromUtf8(smbiosData.data() + stringOffset);
-    //         //     } else if (currentStringIdx == partNumberIdx) {
-    //         //         module.partNumber = QString::fromUtf8(smbiosData.data() + stringOffset);
-    //         //     } else if (currentStringIdx == serialNumberIdx) {
-    //         //         module.serialNumber = QString::fromUtf8(smbiosData.data() + stringOffset);
-    //         //     } else if (currentStringIdx == assetTagIdx) {
-    //         //         module.assetTag = QString::fromUtf8(smbiosData.data() + stringOffset);
-    //         //     }
-    //         //     stringOffset += strlen(smbiosData.data() + stringOffset) + 1;
-    //         //     currentStringIdx++;
-    //         // }
-    //         InfoLin::vecMemory.push_back(module);
-    //     }
+    for (const QString &line : stringList) {                                                    // Обработка каждой строки вывода lsblk
+        QStringList fields = line.split(QRegExp("\\s+"), Qt::SkipEmptyParts);                   // Разделяем каждую строку на подстроки (их 3)
+        if (fields.at(2) == "disk" && fields.at(0).contains("sd")) { //fields.size() >= 3       // Если в 3 подстроке есть слово disk и первая подстрока содержит символы sd
+            InfoPlatform::infoHardDrive newStruct;                                              // Создаём новую структуру для записи характеристик
+            std::vector<QString> vecValue;                                                      // Вектор в который будем сохранять результаты парсинга
+            QString deviceName = fields[0];                                                     // Сохраняем временное имя
+            QString deviceSize = fields[1];                                                     // Сохраняем размер диска
+            deviceSize.remove("G");                                                             // Подготавливаем строку к переходу к типо DWORD
+            deviceSize.replace(",",".");
+            newStruct.Size = deviceSize.toDouble();                                             // Преобразуем в DWORD
 
-    //     offset += length;
-    //     while (offset < smbiosData.size() && smbiosData[offset] == 0) {
-    //         offset++;
-    //     }
-    // }
+            // Получаем информацию о диске с помощью hdparm
+            QString hdparmOutput = "hdparm -I /dev/" + deviceName;                              // Вызываем новый процесс для определения всех характеристик текущего диска
+            QProcess subProcess;
+            subProcess.start(hdparmOutput);
+            subProcess.waitForFinished();
+            subProcess.waitForReadyRead();
+            QString diskOutput = subProcess.readAllStandardOutput();                            // Считываем характеристики
 
-    // // // Вывод информации о всех найденных модулях RAM
-    // // for (const auto &module : ramModules) {
-    // //     module.print();
-    // // }
-};
+            if(diskOutput.isEmpty()){
+                qCritical() << "Не удалось получить информацию о диске " + deviceName + " с помощью hdparm.";
+                continue;
+            }
 
+            QStringList diskFields = diskOutput.split("\n", Qt::SkipEmptyParts);                // Разбиваем их для удобности по строкам
+            const QString keyWord = "Model Number:";                                            // Ключевое слово для поиска наименования модели
+            for(const QString &diskLine : diskFields){                                          // Проходим по всем строкам
+                if(diskLine.contains(keyWord)){                                                 // Если строка содержит ключевое слово
+                    QString temp = diskLine.trimmed();                                          // Удаляем лишние пробелы
+                    temp.remove(keyWord);                                                       // Удаляем само ключевое слово из строки
+                    newStruct.Name = temp.trimmed();
+                    qCritical() << newStruct.Name;                                              // Сохраняем результат
+                    break;
+                }
+            }
+            InfoLin::vecDrive.push_back(newStruct);
+        }
+    }
+}
 
+bool InfoLin::GetCDROM() {  // Информация о дисководе
+    QDir devDir("/dev");
+    QStringList srDevices = devDir.entryList(QStringList() << "sr*", QDir::System);
+    if(!srDevices.isEmpty())
+        return true; // Если нашли CDROM
+    else
+        return false; // Если не нашли CDROM
+}
 #endif

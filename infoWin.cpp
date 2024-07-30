@@ -15,43 +15,43 @@
  InfoWin::InfoWin() { //Конструктор
     SMBIOS SMTable; // Класс для содержания необработанной инфы из SMBIOS
     InfoWin::DecodeSMBIOS(&SMTable); // Расшифровать информацию из таблицы SMBIOS
-//     InfoWin::GetHardDriveInfo(); //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
+    InfoWin::GetHardDriveInfo(); //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
  }
 
-// void InfoWin::GetHardDriveInfo(){ //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
-//     QProcess process; // Создаем процесс PowerShell
+ void InfoWin::GetHardDriveInfo(){ //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
+     QProcess process; // Создаем процесс PowerShell
 
-//     // Устанавливаем команду для выполнения скрипта PowerShell
-//     QStringList arguments;
-//     arguments << "-Command" << "Get-WmiObject Win32_DiskDrive; Exit 0;"; //<< "-NoProfile" << "exit"
-//     process.start("powershell", arguments); // Запускаем процесс
+     // Устанавливаем команду для выполнения скрипта PowerShell
+     QStringList arguments;
+     arguments << "-Command" << "Get-WmiObject Win32_DiskDrive; Exit 0;"; //<< "-NoProfile" << "exit"
+     process.start("powershell", arguments); // Запускаем процесс
 
-//     //if(!process.waitForReadyRead(30000)){ // Ждём пока данные будут доступны для чтения (waitForFinished зависает намертво)
-//     //if(!process.waitForFinished(-1)){
-//     if(!process.waitForFinished(30000)){
-//         process.kill(); // Завершаем процесс
-//         return; // Выходим из функции
-//     }
-//     QString queryResult = process.readAllStandardOutput();    // Если всё хорошо, считываем данные из запроса.
-//     // Destroyed while process ("powershell") is still running.
-//     process.kill(); // Завершаем процесс (// waitForFinished зависает намертво)
+     //if(!process.waitForReadyRead(30000)){ // Ждём пока данные будут доступны для чтения (waitForFinished зависает намертво)
+     //if(!process.waitForFinished(-1)){
+     if(!process.waitForFinished(30000)){
+         process.kill(); // Завершаем процесс
+         return; // Выходим из функции
+     }
+     QString queryResult = process.readAllStandardOutput();    // Если всё хорошо, считываем данные из запроса.
+     // Destroyed while process ("powershell") is still running.
+     process.kill(); // Завершаем процесс (// waitForFinished зависает намертво)
 
-//     //Обрабатываем данные
-//     WORD diskCount = queryResult.count("Model      :"); // Кол-во вхождений подстроки в строку
-//     for(WORD i = 0; i < diskCount; ++i){  // Проходим по всем дискам
-//         InfoWin::infoHardDrive newStruct; // Создаём структуру для хранения данных
-//         int index = queryResult.indexOf("Model      :", 0, Qt::CaseInsensitive); // Ищем подстроку Model
-//         queryResult.remove(0, index + 13); // Удаляем лишние данные (Получаем начало названия диска)
-//         index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец названия
-//         newStruct.Name = queryResult.left(index); // Сохраняем имя диска
-//         queryResult.remove(0, index + 15); // Удаляем лишние данные (Получаем начало размера диска)
-//         index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец размера диска
-//         QString tempStr = queryResult.left(index); // Определяем размер диска в отдельную строку
-//         long long tempLong = tempStr.toLongLong(); // Конвертируем байты а численный тип
-//         newStruct.Size = tempLong / (1024 * 1024 * 1024); // Конвертируем байты в гигабайты и сохраняем значение
-//         InfoWin::vecDrive.push_back(newStruct); // Сохраняем структуру в векторе
-//     }
-// };
+     //Обрабатываем данные
+     WORD diskCount = queryResult.count("Model      :"); // Кол-во вхождений подстроки в строку
+     for(WORD i = 0; i < diskCount; ++i){  // Проходим по всем дискам
+         InfoPlatform::infoHardDrive newStruct; // Создаём структуру для хранения данных
+         int index = queryResult.indexOf("Model      :", 0, Qt::CaseInsensitive); // Ищем подстроку Model
+         queryResult.remove(0, index + 13); // Удаляем лишние данные (Получаем начало названия диска)
+         index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец названия
+         newStruct.Name = queryResult.left(index); // Сохраняем имя диска
+         queryResult.remove(0, index + 15); // Удаляем лишние данные (Получаем начало размера диска)
+         index = queryResult.indexOf("\r", 0, Qt::CaseInsensitive); // Ищем конец размера диска
+         QString tempStr = queryResult.left(index); // Определяем размер диска в отдельную строку
+         long long tempLong = tempStr.toLongLong(); // Конвертируем байты а численный тип
+         newStruct.Size = tempLong / (1024 * 1024 * 1024); // Конвертируем байты в гигабайты и сохраняем значение
+         InfoWin::vecDrive.push_back(newStruct); // Сохраняем структуру в векторе
+     }
+ };
 
 void InfoWin::DecodeSMBIOS(SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
     // ОЗУ
@@ -209,78 +209,78 @@ DWORD InfoWin::GetMemorySize(){ //Получить общий объём ОЗУ
 };
 
 
-// QString InfoWin::GetGPUName(){ // Получить модель видеокарты
-//     DISPLAY_DEVICE displayDevice;
-//     displayDevice.cb = sizeof (DISPLAY_DEVICE);
+QString InfoWin::GetGPUName(){ // Получить модель видеокарты
+ DISPLAY_DEVICE displayDevice;
+ displayDevice.cb = sizeof (DISPLAY_DEVICE);
 
-//     DWORD deviceIndex = 0;
-//        // while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
-//        //     if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-//        //         return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
-//        //         //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-//        //     } else{
-//        //         //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-//        //     }
-//        //     deviceIndex++;
-//        // }
-//     //На разных компах по разному
-//     while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
-//         if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
-//             return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
-//             //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
-//         } else{
-//             //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
-//         }
-//         deviceIndex++;
-//     }
-//     return "Undefined";
-// };
+ DWORD deviceIndex = 0;
+    // while (EnumDisplayDevices(NULL, deviceIndex, &displayDevice, 0)){
+    //     if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+    //         return displayDevice.DeviceString; // Преобразуем Wchar_t в QString
+    //         //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+    //     } else{
+    //         //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+    //     }
+    //     deviceIndex++;
+    // }
+ //На разных компах по разному
+ while (EnumDisplayDevicesW(NULL, deviceIndex, &displayDevice, 0)){
+     if(displayDevice.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE){
+         return QString::fromWCharArray(displayDevice.DeviceString); // Преобразуем Wchar_t в QString
+         //qDebug() << "Primary Display Adapter: " << displayDevice.DeviceString;
+     } else{
+         //qDebug() << "Secondary Display Adapter: " << displayDevice.DeviceString;
+     }
+     deviceIndex++;
+ }
+ return "Undefined";
+};
 
-// DWORD InfoWin::GetGPUMemSize(){ // Получить объём видеопамяти
-//     IDXGIFactory* pFactory;
-//     HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
-//     if (FAILED(hr)){
-//         //qDebug() << "Failed to create DXGI factory. Error code: " << hr;
-//         return 0;
-//     }
+DWORD InfoWin::GetGPUMemSize(){ // Получить объём видеопамяти
+     IDXGIFactory* pFactory;
+     HRESULT hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
+     if (FAILED(hr)){
+         //qDebug() << "Failed to create DXGI factory. Error code: " << hr;
+         return 0;
+     }
 
-//     IDXGIAdapter* pAdapter;
-//     hr = pFactory->EnumAdapters(0, &pAdapter);
-//     if(FAILED(hr)){
-//         //qDebug() << "Failed to enumerate DXGI adapters. Error code: " << hr;
-//         return 0;
-//         pFactory->Release();
-//     }
-//     DXGI_ADAPTER_DESC adapterDesc;
-//     hr = pAdapter->GetDesc(&adapterDesc);
-//     if(FAILED(hr)){
-//         //qDebug() << "Failed to get DXGI adapter description. Error code: " << hr;
-//         return 0;
-//         pAdapter->Release();
-//         pFactory->Release();
-//     }
-//     //qDebug() << "Video Memory: " <<adapterDesc.DedicatedVideoMemory / (1024 * 1024) << "MB";
-//     return adapterDesc.DedicatedVideoMemory / (1024 * 1024);
-//     pAdapter->Release();
-//     pFactory->Release();
-// };
+     IDXGIAdapter* pAdapter;
+     hr = pFactory->EnumAdapters(0, &pAdapter);
+     if(FAILED(hr)){
+         //qDebug() << "Failed to enumerate DXGI adapters. Error code: " << hr;
+         return 0;
+         pFactory->Release();
+     }
+     DXGI_ADAPTER_DESC adapterDesc;
+     hr = pAdapter->GetDesc(&adapterDesc);
+     if(FAILED(hr)){
+         //qDebug() << "Failed to get DXGI adapter description. Error code: " << hr;
+         return 0;
+         pAdapter->Release();
+         pFactory->Release();
+     }
+     //qDebug() << "Video Memory: " <<adapterDesc.DedicatedVideoMemory / (1024 * 1024) << "MB";
+     return adapterDesc.DedicatedVideoMemory / (1024 * 1024);
+     pAdapter->Release();
+     pFactory->Release();
+};
 
-// bool InfoWin::GetCDROM(){ // Получить наличие дисковода
-//     // Проходим по буквам дисков, начиная с 'A' и заканчивая 'Z'
-//     for (char drive = 'A'; drive <= 'Z'; ++drive) {
-//         // Формируем строку с именем диска
-//         std::string rootPath = std::string("\\\\.\\") + drive + ":";
+bool InfoWin::GetCDROM(){ // Получить наличие дисковода
+     // Проходим по буквам дисков, начиная с 'A' и заканчивая 'Z'
+     for (char drive = 'A'; drive <= 'Z'; ++drive) {
+         // Формируем строку с именем диска
+         std::string rootPath = std::string("\\\\.\\") + drive + ":";
 
-//         // Получаем тип дискового устройства
-//         UINT driveType = GetDriveTypeA(rootPath.c_str());
+         // Получаем тип дискового устройства
+         UINT driveType = GetDriveTypeA(rootPath.c_str());
 
-//         // Проверяем, является ли диск CDROM'ом
-//         if (driveType == DRIVE_CDROM) { // Если нашли CDROM
-//             return true;
-//         }
-//     }
-//     return false; // Если не нашли CDROM
-// };
+         // Проверяем, является ли диск CDROM'ом
+         if (driveType == DRIVE_CDROM) { // Если нашли CDROM
+             return true;
+         }
+     }
+     return false; // Если не нашли CDROM
+};
 
 // //void InfoWin::GetMonitor() { // Получить инфу об мониторе
 // //    HMONITOR hMonitor = MonitorFromPoint(POINT{0, 0}, MONITOR_DEFAULTTOPRIMARY); // Получаем список мониторов
