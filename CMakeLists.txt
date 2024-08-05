@@ -10,9 +10,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-#find_package(Qt6 REQUIRED COMPONENTS Sql)                               # Для базы данных
-find_package(Qt5 REQUIRED COMPONENTS Sql)                               # Для базы данных
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)                            # Для базы данных
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Sql)                               # Для базы данных
 
 if (WIN32)
     #find_package(wbemuuid)                                                 # Для WMI
@@ -61,8 +60,7 @@ else()
 endif()
 
 target_link_libraries(ComputerAccounting PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(ComputerAccounting PRIVATE Qt5::Sql)                          # Для базы данных
-#target_link_libraries(ComputerAccounting PRIVATE Qt6::Sql)                          # Для базы данных
+target_link_libraries(ComputerAccounting PRIVATE Qt${QT_VERSION_MAJOR}::Sql)                          # Для базы данных
 
 if (WIN32)
     target_link_libraries(ComputerAccounting PRIVATE dxgi)                              # DirectX API wbemuuid

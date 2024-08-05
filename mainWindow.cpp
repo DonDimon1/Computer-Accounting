@@ -223,6 +223,18 @@ void MainWindow::on_tabWidget_Main_tabCloseRequested(int index) { // Закры�
 }
 
 bool MainWindow::creationTablesDB() { // Создание таблиц для работы с БД
+//    query->prepare("DROP TABLE BasicInf;");
+//    query->exec();
+//    query->clear();
+//    query->prepare("DROP TABLE Hardware;");
+//    query->exec();
+//    query->clear();
+//    query->prepare("DROP TABLE Repair;");
+//    query->exec();
+//    query->clear();
+//    query->prepare("DROP TABLE Movements;");
+//    query->exec();
+//    query->clear();
     // Подготовкак запроса создания таблицы MainTab
     query->prepare("CREATE TABLE IF NOT EXISTS MainTab ("
                    "ID INT PRIMARY KEY,"
@@ -240,13 +252,13 @@ bool MainWindow::creationTablesDB() { // Создание таблиц для р
     query->prepare("CREATE TABLE IF NOT EXISTS BasicInf("
                    "ID INT,"
                    "LastChange DATETIME,"
-                   "ComputerName VARCHAR(50),"
-                   "OS VARCHAR(40),"
+                   "ComputerName VARCHAR(100),"
+                   "OS VARCHAR(100),"
                    "bitWidth VARCHAR(3),"
                    "NumberOIT VARCHAR(7),"
-                   "Department VARCHAR(50),"
-                   "User VARCHAR(50),"
-                   "Antivirus VARCHAR(50),"
+                   "Department VARCHAR(100),"
+                   "User VARCHAR(100),"
+                   "Antivirus VARCHAR(100),"
                    "Status VARCHAR(30),"
                    "BiosPassword VARCHAR(30),"
                    "Comments TEXT)"
@@ -261,11 +273,11 @@ bool MainWindow::creationTablesDB() { // Создание таблиц для р
                    "ID INT,"
                    "LastChange DATETIME,"
                    "CPU VARCHAR(100),"
-                   "CPUManufacturer VARCHAR(50),"
+                   "CPUManufacturer VARCHAR(100),"
                    "CPUFrequency INT,"
                    "NumberCPUCores INT,"
                    "Motherboard VARCHAR(100),"
-                   "MotherboardManufacturer VARCHAR(50),"
+                   "MotherboardManufacturer VARCHAR(100),"
                    "Videocard TEXT,"
                    "videoMemory INT,"
                    "TypeVideoAdapter VARCHAR(50),"

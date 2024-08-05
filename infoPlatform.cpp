@@ -1,4 +1,4 @@
 #include "infoPlatform.h"
 
-InfoPlatform::InfoPlatform() {}
+InfoPlatform::InfoPlatform(QObject *parent) : QObject(parent){}
 

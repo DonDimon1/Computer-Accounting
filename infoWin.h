@@ -7,8 +7,9 @@
 
 class InfoWin : public InfoPlatform
 {
+    Q_OBJECT
 public:
-    InfoWin();                          // Конструктор
+    explicit InfoWin(QObject *parent = nullptr);          // Конструктор
     ~InfoWin() = default;
 
     void DecodeSMBIOS(SMBIOS *SMTable) override; // Функция для получения информации об оперативной памяти из SMBIOS для Windows
@@ -43,10 +44,10 @@ public:
     // std::vector<infoMonitors> vecMonitors; // Информация обо всех плашках мониторах
 
     //ОЗУ
-    WORD TotalRAMSlots;                     // Общее кол-во разъёмов для памяти
-    std::vector<InfoPlatform::infoMemory> vecMemory;      // Информация обо всех плашках ОЗУ
+    // WORD TotalRAMSlots;                     // Общее кол-во разъёмов для памяти
+    // std::vector<InfoPlatform::infoMemory> vecMemory;      // Информация обо всех плашках ОЗУ
     //Диск
-    std::vector<InfoPlatform::infoHardDrive> vecDrive;    // Информация обо всех физических дисках
+    // std::vector<InfoPlatform::infoHardDrive> vecDrive;    // Информация обо всех физических дисках
     // //Монитор
     // struct infoMonitors;                    // Структура Информации о конкретном мониторе
     // std::vector<infoMonitors> vecMonitors;  // Информация обо всех плашках мониторах

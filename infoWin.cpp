@@ -12,10 +12,10 @@
 #include <QDebug>
 //#include <QStorageInfo>
 
- InfoWin::InfoWin() { //Конструктор
-    SMBIOS SMTable; // Класс для содержания необработанной инфы из SMBIOS
-    InfoWin::DecodeSMBIOS(&SMTable); // Расшифровать информацию из таблицы SMBIOS
-    InfoWin::GetHardDriveInfo(); //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
+ InfoWin::InfoWin(QObject *parent) : InfoPlatform(parent) { //Конструктор
+    SMBIOS SMTable;                                         // Класс для содержания необработанной инфы из SMBIOS
+    InfoWin::DecodeSMBIOS(&SMTable);                        // Расшифровать информацию из таблицы SMBIOS
+    InfoWin::GetHardDriveInfo();                            //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.
  }
 
  void InfoWin::GetHardDriveInfo(){ //Функцию для чтения информации про жёсткие диски из WMI с помощью PowerShell.

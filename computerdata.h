@@ -35,6 +35,8 @@ public:
         Qt::ItemFlags flags(const QModelIndex &index) const override; // Переопределяем условие редактирования в MySqlTableModel
     };
 
+    InfoPlatform *comp = nullptr;                 // Указатель на класс с информацией о характеристиках
+
 signals:
     void sendUpdateSignal(QString tabName = "Новая вкладка"); // Отправка сигнала для обновления таблицы tableViewMainTab на форме mainWindow
 
@@ -45,6 +47,7 @@ private slots:
 
     void on_CustomContextMenuRequested(const QPoint &pos); // Кастомный слот для контекстного меню = QPoint(NULL, NULL)
     void insertRow(); // Вставить новую строку с помощью контекстного меню
+    void updateMySqlTableModel(QString model, QString field, QString dataStr = ""); // Обновление моделей в основном потоке
 
 private:
     Ui::computerData *ui;

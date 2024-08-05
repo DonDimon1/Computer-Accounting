@@ -3,12 +3,15 @@
 #define INFOPLATFORM_H
 
 #include "smbios.h" // Подключаем класс чтения таблиц SMBIOS
+#include <QObject>
 #include <QApplication>
 
-class InfoPlatform
+
+class InfoPlatform : public QObject
 {
+    Q_OBJECT
 public:
-    InfoPlatform();
+    explicit InfoPlatform(QObject *parent = nullptr);
     virtual ~InfoPlatform() = default;
 
     virtual void DecodeSMBIOS(SMBIOS *SMTable) = 0; // Декодируем таблицу SMBIOS
@@ -37,17 +40,24 @@ public:
     //Информация о мониторах
     //void GetMonitor();                            // Получить информацию о мониторе
 
-
     //ОЗУ
-    WORD TotalRAMSlots;                     // Общее кол-во разъёмов для памяти
-    struct infoMemory;                      // Структура информации о конкретной плашки памяти.
-    std::vector<infoMemory> vecMemory;      // Информация обо всех плашках ОЗУ
+    WORD TotalRAMSlots{};                       // Общее кол-во разъёмов для памяти
+    struct infoMemory;                          // Структура информации о конкретной плашки памяти.
+    std::vector<infoMemory> vecMemory{};        // Информация обо всех плашках ОЗУ
     //Disk
-    struct infoHardDrive;                   // Структура информации о конкретном жёстком диске(или ссд).
-    std::vector<infoHardDrive> vecDrive;    // Информация обо всех физических дисках
+    struct infoHardDrive;                       // Структура информации о конкретном жёстком диске(или ссд).
+    std::vector<infoHardDrive> vecDrive{};      // Информация обо всех физических дисках
     //Monitor
-    struct infoMonitors;                    // Структура Информации о конкретном мониторе
-    std::vector<infoMonitors> vecMonitors;  // Информация обо всех плашках мониторах
+    struct infoMonitors;                        // Структура Информации о конкретном мониторе
+    //std::vector<infoMonitors> vecMonitors;    // Информация обо всех плашках мониторах
+
+    //Геттеры
+//    virtual WORD GetTotalRAMSlots() = 0;
+//    virtual std::vector<infoMemory> GetInfoMemoryVec() = 0;
+//    virtual std::vector<infoHardDrive> GetInfoHardDriveVec() = 0;
+signals:
+    void sendUpdateMySqlTableModelSignal(QString model, QString field, QString dataStr = ""); // Отправка сигнала для обновления таблиц MySqlTableModel на форме computerdata
+
 };
 
 struct InfoPlatform::infoMemory {

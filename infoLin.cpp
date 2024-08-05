@@ -13,22 +13,23 @@
 #include <QFile>
 #include <QByteArray>
 // Для определения модели Видеокарты
-#include <QProcess>
 #include <QStringList>
 // Для определения CDROM
 #include <QDir>
+#include <QRegularExpression>
 
 
-InfoLin::InfoLin(){                     // Конструктор
-    SMBIOS SMTable;                     // Класс для содержания необработанной инфы из SMBIOS
-    InfoLin::DecodeSMBIOS(&SMTable);    // Расшифровать информацию из таблицы SMBIOS
-    InfoLin::GetHardDriveInfo();        // Функцию для чтения информации про жёсткие диски
+InfoLin::InfoLin(QObject *parent) : InfoPlatform(parent) {      // Конструктор
+    SMBIOS SMTable;                                             // Класс для содержания необработанной инфы из SMBIOS
+    InfoLin::DecodeSMBIOS(&SMTable);                            // Расшифровать информацию из таблицы SMBIOS
+    InfoLin::GetHardDriveInfo();                                // Функцию для чтения информации про жёсткие диски
 }
 
 void InfoLin::DecodeSMBIOS(SMBIOS *SMTable){     //Функция для декодирования данных из таблицы SMBIOS
     // ОЗУ
     WORD slotsNum = SMTable->vecMemory.size();                                                  // Кол-во разъёмов для памяти, найденных в SMBIOS
-    InfoLin::TotalRAMSlots = slotsNum;                                                          // Сохраняем инфу о общем кол-ве разъёмов для памяти
+    //InfoLin::TotalRAMSlots = slotsNum;                                                          // Сохраняем инфу о общем кол-ве разъёмов для памяти
+    InfoPlatform::TotalRAMSlots = slotsNum;
     for(UINT i = 0; i < slotsNum; ++i){                                                         // Перебераем все плашки ОЗУ
         if(SMTable->vecMemory.at(i).Size){                                                      // Если плашка памяти установлена
             InfoPlatform::infoMemory newStruct;                                                 // Создаём новую структуру с обработанными данными про конкретную плашку ОЗУ
@@ -193,22 +194,33 @@ DWORD InfoLin::GetMemorySize(){ //Получить общий объём ОЗУ
 };
 
 QString InfoLin::GetGPUName() { // Получить модель видеокарты
-    //QString cmd = "sh -c \"lspci | grep -E \"VGA|3D\"\"";
-    //QString cmd = "lspci | grep -E \"VGA|3D\"";
+    // Процесс считывает данные асинхронно, затем возвращает в processFinished результат, который мы там обработаем.
+//    if (process) {
+//        delete process;
+//    }
     QString cmd = "lshw -c video";
-    QProcess process;
-    process.start(cmd);
-    process.waitForFinished();          // TODO: вызыв консоли тормозит программу. Либо обойтись без вызова, либо закинуть это в отдельный поток
-    process.waitForReadyRead();
-    QString output = process.readAllStandardOutput(); // Вывод консольной команды
+    process = new QProcess(this);
+    //connect(process, &QProcess::readyReadStandardOutput, this, &InfoLin::readProcessOutput);
+    //connect(process,SIGNAL(readyReadStandardOutput()), SLOT(readProcessOutput()));
+    //connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &InfoLin::processFinished);
+    connect(process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processGetGPUNameFinished(int,QProcess::ExitStatus)));
+    process->start(cmd);
+    return "Считываю данные, подождите пожалуйста.";
+}
 
+//void InfoLin::readProcessOutput() {
+
+//}
+
+void InfoLin::processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitStatus) {
+
+    QString output = process->readAllStandardOutput();
     if(output.isEmpty()){
-        qCritical() << "Не удалось получить модель видеокарты. Попробуйте запустить программу с правами суперпользователя (root), либо обновите пакет lshw.";
-        qCritical() << process.readAllStandardError();
-        process.close();
-        return "undefine";
+       qCritical() << "Не удалось получить модель видеокарты. Попробуйте запустить программу с правами суперпользователя (root), либо обновите пакет lshw.";
+       emit InfoPlatform::sendUpdateMySqlTableModelSignal("hardware", "Videocard", "undefine");
+       process->deleteLater();
+       process = nullptr;
     }
-    process.close();
 
     QStringList stringList = output.split('\n', Qt::SkipEmptyParts); // Разделяем строку на несколько строк для удобства
     const std::vector<QString> search = {"product:", "vendor:", "version:"};
@@ -225,7 +237,11 @@ QString InfoLin::GetGPUName() { // Получить модель видеока�
                 break;
         }
     }
-    return vecValue.at(1) + " " + vecValue.at(0) + " version:" + vecValue.at(2); // Выводим значения в нужном порядке
+
+    QString result = vecValue.at(1) + " " + vecValue.at(0) + " version:" + vecValue.at(2); // Выводим значения в нужном порядке
+    emit InfoPlatform::sendUpdateMySqlTableModelSignal("hardware", "Videocard", result);
+    process->deleteLater();
+    process = nullptr;
 }
 
 DWORD InfoLin::GetGPUMemSize() {              // Получить объём видеопамяти видеокарты
@@ -234,60 +250,62 @@ DWORD InfoLin::GetGPUMemSize() {              // Получить объём в�
 }
 
 void InfoLin::GetHardDriveInfo() { // Получить информацию о физических дисках
+
+
     // TODO: вызыв консоли тормозит программу. Либо обойтись без вызова, либо закинуть это в отдельный поток
     //hdparm -I /dev/sda
     //ls -lF /dev/disk/by-id/
-    QProcess process;
-    process.start("lsblk -o NAME,SIZE,TYPE --noheadings");  // Получаем список всех дисков
-    process.waitForFinished();
-    process.waitForReadyRead();
-    QString output = process.readAllStandardOutput();
+    // QProcess process2;
+    // process2.start("lsblk -o NAME,SIZE,TYPE --noheadings");  // Получаем список всех дисков
+    // process2.waitForFinished();
+    // process2.waitForReadyRead();
+    // QString output = process2.readAllStandardOutput();
 
-    if(output.isEmpty()){
-        qCritical() << "Не удалось получить информацию о количестве физических дисков с помощью lsblk.";
-        return;
-    }
+    // if(output.isEmpty()){
+    //     qCritical() << "Не удалось получить информацию о количестве физических дисков с помощью lsblk.";
+    //     return;
+    // }
 
-    QStringList stringList = output.split("\n", Qt::SkipEmptyParts);                            // Разбиваем список на строки
+    // QStringList stringList = output.split("\n", Qt::SkipEmptyParts);                            // Разбиваем список на строки
 
-    for (const QString &line : stringList) {                                                    // Обработка каждой строки вывода lsblk
-        QStringList fields = line.split(QRegExp("\\s+"), Qt::SkipEmptyParts);                   // Разделяем каждую строку на подстроки (их 3)
-        if (fields.at(2) == "disk" && fields.at(0).contains("sd")) { //fields.size() >= 3       // Если в 3 подстроке есть слово disk и первая подстрока содержит символы sd
-            InfoPlatform::infoHardDrive newStruct;                                              // Создаём новую структуру для записи характеристик
-            std::vector<QString> vecValue;                                                      // Вектор в который будем сохранять результаты парсинга
-            QString deviceName = fields[0];                                                     // Сохраняем временное имя
-            QString deviceSize = fields[1];                                                     // Сохраняем размер диска
-            deviceSize.remove("G");                                                             // Подготавливаем строку к переходу к типо DWORD
-            deviceSize.replace(",",".");
-            newStruct.Size = deviceSize.toDouble();                                             // Преобразуем в DWORD
+    // for (const QString &line : stringList) {                                                    // Обработка каждой строки вывода lsblk
+    //     QStringList fields = line.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);        // Разделяем каждую строку на подстроки (их 3)
+    //     if (fields.at(2) == "disk" && fields.at(0).contains("sd")) { //fields.size() >= 3       // Если в 3 подстроке есть слово disk и первая подстрока содержит символы sd
+    //         InfoPlatform::infoHardDrive newStruct;                                              // Создаём новую структуру для записи характеристик
+    //         std::vector<QString> vecValue;                                                      // Вектор в который будем сохранять результаты парсинга
+    //         QString deviceName = fields[0];                                                     // Сохраняем временное имя
+    //         QString deviceSize = fields[1];                                                     // Сохраняем размер диска
+    //         deviceSize.remove("G");                                                             // Подготавливаем строку к переходу к типо DWORD
+    //         deviceSize.replace(",",".");
+    //         newStruct.Size = deviceSize.toDouble();                                             // Преобразуем в DWORD
 
-            // Получаем информацию о диске с помощью hdparm
-            QString hdparmOutput = "hdparm -I /dev/" + deviceName;                              // Вызываем новый процесс для определения всех характеристик текущего диска
-            QProcess subProcess;
-            subProcess.start(hdparmOutput);
-            subProcess.waitForFinished();
-            subProcess.waitForReadyRead();
-            QString diskOutput = subProcess.readAllStandardOutput();                            // Считываем характеристики
+    //         // Получаем информацию о диске с помощью hdparm
+    //         QString hdparmOutput = "hdparm -I /dev/" + deviceName;                              // Вызываем новый процесс для определения всех характеристик текущего диска
+    //         QProcess subProcess;
+    //         subProcess.start(hdparmOutput);
+    //         subProcess.waitForFinished();
+    //         subProcess.waitForReadyRead();
+    //         QString diskOutput = subProcess.readAllStandardOutput();                            // Считываем характеристики
 
-            if(diskOutput.isEmpty()){
-                qCritical() << "Не удалось получить информацию о диске " + deviceName + " с помощью hdparm.";
-                continue;
-            }
+    //         if(diskOutput.isEmpty()){
+    //             qCritical() << "Не удалось получить информацию о диске " + deviceName + " с помощью hdparm.";
+    //             continue;
+    //         }
 
-            QStringList diskFields = diskOutput.split("\n", Qt::SkipEmptyParts);                // Разбиваем их для удобности по строкам
-            const QString keyWord = "Model Number:";                                            // Ключевое слово для поиска наименования модели
-            for(const QString &diskLine : diskFields){                                          // Проходим по всем строкам
-                if(diskLine.contains(keyWord)){                                                 // Если строка содержит ключевое слово
-                    QString temp = diskLine.trimmed();                                          // Удаляем лишние пробелы
-                    temp.remove(keyWord);                                                       // Удаляем само ключевое слово из строки
-                    newStruct.Name = temp.trimmed();
-                    qCritical() << newStruct.Name;                                              // Сохраняем результат
-                    break;
-                }
-            }
-            InfoLin::vecDrive.push_back(newStruct);
-        }
-    }
+    //         QStringList diskFields = diskOutput.split("\n", Qt::SkipEmptyParts);                // Разбиваем их для удобности по строкам
+    //         const QString keyWord = "Model Number:";                                            // Ключевое слово для поиска наименования модели
+    //         for(const QString &diskLine : diskFields){                                          // Проходим по всем строкам
+    //             if(diskLine.contains(keyWord)){                                                 // Если строка содержит ключевое слово
+    //                 QString temp = diskLine.trimmed();                                          // Удаляем лишние пробелы
+    //                 temp.remove(keyWord);                                                       // Удаляем само ключевое слово из строки
+    //                 newStruct.Name = temp.trimmed();
+    //                 qCritical() << newStruct.Name;                                              // Сохраняем результат
+    //                 break;
+    //             }
+    //         }
+    //         InfoLin::vecDrive.push_back(newStruct);
+    //     }
+    // }
 }
 
 bool InfoLin::GetCDROM() {  // Информация о дисководе
@@ -298,4 +316,15 @@ bool InfoLin::GetCDROM() {  // Информация о дисководе
     else
         return false; // Если не нашли CDROM
 }
+
+//Геттеры
+//WORD InfoLin::GetTotalRAMSlots() override{
+//    return TotalRAMSlots;
+//}
+//std::vector<InfoPlatform::infoMemory> InfoLin::GetInfoMemoryVec() override{
+//    return vecMemory;
+//}
+//std::vector<InfoPlatform::infoHardDrive> InfoLin::GetInfoHardDriveVec() override{
+//    return vecDrive;
+//}
 #endif

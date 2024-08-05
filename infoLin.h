@@ -3,11 +3,13 @@
 
 #ifdef __linux__ // Класс для сбора всей информации о комьютере в среде Linux
 #include "infoPlatform.h"
+#include <QProcess>
 
 class InfoLin : public InfoPlatform
 {
+    Q_OBJECT
 public:
-    InfoLin(); // Конструктор
+    explicit InfoLin(QObject *parent = nullptr); // Конструктор
     ~InfoLin() = default;
 
     void DecodeSMBIOS(SMBIOS *SMTable) override;    // Функция для получения информации об оперативной памяти из SMBIOS для Linux
@@ -35,14 +37,22 @@ public:
     bool GetCDROM() override;
 
     //ОЗУ
-     WORD TotalRAMSlots;                                // Общее кол-во разъёмов для памяти
-    // struct infoMemory;                               // Структура информации о конкретной плашки памяти.
-     std::vector<InfoPlatform::infoMemory> vecMemory;   // Информация обо всех плашках ОЗУ
+    //WORD TotalRAMSlots;                                 // Общее кол-во разъёмов для памяти
+    //std::vector<InfoPlatform::infoMemory> vecMemory;    // Информация обо всех плашках ОЗУ
     //Дису
-    std::vector<infoHardDrive> vecDrive;             // Информация обо всех физических дисках
+    //std::vector<infoHardDrive> vecDrive;                // Информация обо всех физических дисках
     // //Monitor
-    // struct infoMonitors;                             // Структура Информации о конкретном мониторе
     // std::vector<infoMonitors> vecMonitors;           // Информация обо всех плашках мониторах
+
+    //Геттеры
+//    WORD GetTotalRAMSlots() override;
+//    std::vector<InfoPlatform::infoMemory> GetInfoMemoryVec() override;
+//    std::vector<InfoPlatform::infoHardDrive> GetInfoHardDriveVec() override;
+private slots:
+    //void readProcessOutput();
+    void processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitStatus);
+private:
+    QProcess *process;
 };
 
 
