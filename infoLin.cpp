@@ -39,7 +39,7 @@ void InfoLin::DecodeSMBIOS(SMBIOS *SMTable){     //Функция для дек�
             newStruct.MemoryType = SMTable->GetMemoryType(SMTable->vecMemory.at(i).MemoryType); // Сохраняем тип памяти
             newStruct.Speed = SMTable->vecMemory.at(i).Speed;                                   // Сохраняем скорость
             newStruct.Manufacturer = SMTable->vecMemory.at(i).Manufacturer;                     // Сохраняем производителя
-            InfoLin::vecMemory.push_back(newStruct);                                            // Добавляем инфу об установленной плашке памяти
+            InfoPlatform::vecMemory.push_back(newStruct);                                            // Добавляем инфу об установленной плашке памяти
         }                                                                                       // Кол-во элементов вектора обозначает кол-во установленных плашек ОЗУ
     }
 };
@@ -193,33 +193,17 @@ DWORD InfoLin::GetMemorySize(){ //Получить общий объём ОЗУ
     return 0;
 };
 
-QString InfoLin::GetGPUName() { // Получить модель видеокарты
-    // Процесс считывает данные асинхронно, затем возвращает в processFinished результат, который мы там обработаем.
-//    if (process) {
-//        delete process;
-//    }
-    QString cmd = "lshw -c video";
-    process = new QProcess(this);
-    //connect(process, &QProcess::readyReadStandardOutput, this, &InfoLin::readProcessOutput);
-    //connect(process,SIGNAL(readyReadStandardOutput()), SLOT(readProcessOutput()));
-    //connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &InfoLin::processFinished);
-    connect(process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processGetGPUNameFinished(int,QProcess::ExitStatus)));
-    process->start(cmd);
+QString InfoLin::GetGPUName(){ // Получить модель видеокарты
+    QString processName = "ProcessGetGPUName";
+    QString command = "lshw -c video";
+    InfoPlatform::processManager->startProcess(processName, command);
     return "Считываю данные, подождите пожалуйста.";
 }
 
-//void InfoLin::readProcessOutput() {
-
-//}
-
-void InfoLin::processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitStatus) {
-
-    QString output = process->readAllStandardOutput();
+void InfoLin::ProcessingDataCPUName(const QString &output){ // Обработка результата процесса ProcessGetGPUName
     if(output.isEmpty()){
        qCritical() << "Не удалось получить модель видеокарты. Попробуйте запустить программу с правами суперпользователя (root), либо обновите пакет lshw.";
        emit InfoPlatform::sendUpdateMySqlTableModelSignal("hardware", "Videocard", "undefine");
-       process->deleteLater();
-       process = nullptr;
     }
 
     QStringList stringList = output.split('\n', Qt::SkipEmptyParts); // Разделяем строку на несколько строк для удобства
@@ -240,9 +224,54 @@ void InfoLin::processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitS
 
     QString result = vecValue.at(1) + " " + vecValue.at(0) + " version:" + vecValue.at(2); // Выводим значения в нужном порядке
     emit InfoPlatform::sendUpdateMySqlTableModelSignal("hardware", "Videocard", result);
-    process->deleteLater();
-    process = nullptr;
 }
+
+//QString InfoLin::GetGPUName() { // Получить модель видеокарты
+//    // Процесс считывает данные асинхронно, затем возвращает в processFinished результат, который мы там обработаем.
+////    if (process) {
+////        delete process;
+////    }
+//    QString cmd = "lshw -c video";
+//    process = new QProcess(this);
+//    //connect(process, &QProcess::readyReadStandardOutput, this, &InfoLin::readProcessOutput);
+//    //connect(process,SIGNAL(readyReadStandardOutput()), SLOT(readProcessOutput()));
+//    //connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &InfoLin::processFinished);
+//    connect(process, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processGetGPUNameFinished(int,QProcess::ExitStatus)));
+//    process->start(cmd);
+//    return "Считываю данные, подождите пожалуйста.";
+//}
+
+//void InfoLin::processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitStatus) {
+
+//    QString output = process->readAllStandardOutput();
+//    if(output.isEmpty()){
+//       qCritical() << "Не удалось получить модель видеокарты. Попробуйте запустить программу с правами суперпользователя (root), либо обновите пакет lshw.";
+//       emit InfoPlatform::sendUpdateMySqlTableModelSignal("hardware", "Videocard", "undefine");
+//       process->deleteLater();
+//       process = nullptr;
+//    }
+
+//    QStringList stringList = output.split('\n', Qt::SkipEmptyParts); // Разделяем строку на несколько строк для удобства
+//    const std::vector<QString> search = {"product:", "vendor:", "version:"};
+//    std::vector<QString> vecValue; //{QString product, QString vendor, QString version};
+
+//    int keyWordIndex = 0;
+//    for(const QString &line : stringList){ // Поиск по всем строкам
+//        if(line.contains(search.at(keyWordIndex))){     // Если ключевое слово найдено
+//            //foundValue = line.trimmed(); // Сохраняем значение (Модель отдельно)
+//            QString foundValue = line.trimmed();
+//            foundValue.remove(search.at(keyWordIndex)); // Удаляем ключевое слово из строки
+//            vecValue.push_back(foundValue);             // Сохраняем строку
+//            if(++keyWordIndex >= search.size())         // Проверка на наличие строк
+//                break;
+//        }
+//    }
+
+//    QString result = vecValue.at(1) + " " + vecValue.at(0) + " version:" + vecValue.at(2); // Выводим значения в нужном порядке
+//    emit InfoPlatform::sendUpdateMySqlTableModelSignal("hardware", "Videocard", result);
+//    process->deleteLater();
+//    process = nullptr;
+//}
 
 DWORD InfoLin::GetGPUMemSize() {              // Получить объём видеопамяти видеокарты
     // TODO: Пока не реализовано
@@ -303,7 +332,7 @@ void InfoLin::GetHardDriveInfo() { // Получить информацию о �
     //                 break;
     //             }
     //         }
-    //         InfoLin::vecDrive.push_back(newStruct);
+    //         InfoPlatform::vecDrive.push_back(newStruct);
     //     }
     // }
 }
@@ -317,14 +346,24 @@ bool InfoLin::GetCDROM() {  // Информация о дисководе
         return false; // Если не нашли CDROM
 }
 
-//Геттеры
-//WORD InfoLin::GetTotalRAMSlots() override{
-//    return TotalRAMSlots;
-//}
-//std::vector<InfoPlatform::infoMemory> InfoLin::GetInfoMemoryVec() override{
-//    return vecMemory;
-//}
-//std::vector<InfoPlatform::infoHardDrive> InfoLin::GetInfoHardDriveVec() override{
-//    return vecDrive;
-//}
+void InfoLin::distributionSignals(const QString &processName, const QString &output) { // Основной слот для распределения сигналов по корректным методам
+    if(processName == "ProcessGetGPUName") {
+        qCritical() << "InfoLin::distributionSignals" << "Сигнал MyProcessManager::processFinished с процессом " << processName << "Пойман";
+        InfoLin::ProcessingDataCPUName(output);
+    }
+    else{
+        qCritical() << "Процесс с именем " << processName << " неоперделён.";
+    }
+}
+
+void InfoLin::distributionErrors(const QString &processName, const QProcess::ProcessError &error) {  // Основной слот для обработки ошибок процессов
+    if(processName == "ProcessGetGPUName") {
+        qCritical() << "Не удалось получить модель видеокарты. Попробуйте запустить программу с правами суперпользователя (root), либо обновите пакет lshw.";
+        qCritical() << "Во время процесса processName возникла ошибка: " << error;
+        emit InfoPlatform::sendUpdateMySqlTableModelSignal("hardware", "Videocard", "undefine");
+    }
+    else{
+        qCritical() << "Процесс с именем " << processName << " неоперделён.";
+    }
+}
 #endif

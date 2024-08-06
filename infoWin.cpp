@@ -8,7 +8,6 @@
 //
 #include <sysinfoapi.h>
 #include <QCoreApplication> //Для запроса PowerShell
-#include <QProcess>
 #include <QDebug>
 //#include <QStorageInfo>
 

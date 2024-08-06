@@ -2,17 +2,16 @@
 #ifndef INFOPLATFORM_H
 #define INFOPLATFORM_H
 
-#include "smbios.h" // Подключаем класс чтения таблиц SMBIOS
-#include <QObject>
+#include "smbios.h"             // Подключаем класс чтения таблиц SMBIOS
+#include "myProcessManager.h"   // Подключаем класс для работы с QProcess
 #include <QApplication>
-
 
 class InfoPlatform : public QObject
 {
     Q_OBJECT
 public:
     explicit InfoPlatform(QObject *parent = nullptr);
-    virtual ~InfoPlatform() = default;
+    virtual ~InfoPlatform();
 
     virtual void DecodeSMBIOS(SMBIOS *SMTable) = 0; // Декодируем таблицу SMBIOS
 
@@ -49,15 +48,15 @@ public:
     std::vector<infoHardDrive> vecDrive{};      // Информация обо всех физических дисках
     //Monitor
     struct infoMonitors;                        // Структура Информации о конкретном мониторе
-    //std::vector<infoMonitors> vecMonitors;    // Информация обо всех плашках мониторах
+    //std::vector<infoMonitors> vecMonitors;    // Информация обо всех мониторах
+    MyProcessManager *processManager{};         // Менеджер процессов QProcess
 
-    //Геттеры
-//    virtual WORD GetTotalRAMSlots() = 0;
-//    virtual std::vector<infoMemory> GetInfoMemoryVec() = 0;
-//    virtual std::vector<infoHardDrive> GetInfoHardDriveVec() = 0;
 signals:
-    void sendUpdateMySqlTableModelSignal(QString model, QString field, QString dataStr = ""); // Отправка сигнала для обновления таблиц MySqlTableModel на форме computerdata
+    void sendUpdateMySqlTableModelSignal(QString model, QString field, QString dataStr = "");                   // Отправка сигнала для обновления таблиц MySqlTableModel на форме computerdata
 
+public slots:
+    virtual void distributionSignals(const QString &processName, const QString &output) = 0;                    // Основной слот для распределения сигналов по корректным методам
+    virtual void distributionErrors(const QString &processName, const QProcess::ProcessError &error) = 0;       // Основной слот для обработки ошибок процессов
 };
 
 struct InfoPlatform::infoMemory {

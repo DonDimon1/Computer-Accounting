@@ -3,7 +3,6 @@
 
 #ifdef __linux__ // Класс для сбора всей информации о комьютере в среде Linux
 #include "infoPlatform.h"
-#include <QProcess>
 
 class InfoLin : public InfoPlatform
 {
@@ -36,6 +35,9 @@ public:
     //Информация о дисководе
     bool GetCDROM() override;
 
+
+    // Обработка процессов QProcess
+    void ProcessingDataCPUName(const QString &output); // Обработка результата процесса ProcessGetGPUName
     //ОЗУ
     //WORD TotalRAMSlots;                                 // Общее кол-во разъёмов для памяти
     //std::vector<InfoPlatform::infoMemory> vecMemory;    // Информация обо всех плашках ОЗУ
@@ -44,17 +46,15 @@ public:
     // //Monitor
     // std::vector<infoMonitors> vecMonitors;           // Информация обо всех плашках мониторах
 
-    //Геттеры
-//    WORD GetTotalRAMSlots() override;
-//    std::vector<InfoPlatform::infoMemory> GetInfoMemoryVec() override;
-//    std::vector<InfoPlatform::infoHardDrive> GetInfoHardDriveVec() override;
 private slots:
     //void readProcessOutput();
-    void processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    //void processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitStatus);
+public slots:
+    void distributionSignals(const QString &processName, const QString &output) override;               // Основной слот для распределения сигналов по корректным методам
+    void distributionErrors(const QString &processName, const QProcess::ProcessError &error) override;  // Основной слот для обработки ошибок процессов
 private:
     QProcess *process;
 };
-
 
 #endif
 

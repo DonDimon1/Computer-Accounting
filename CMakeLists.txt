@@ -18,7 +18,7 @@ if (WIN32)
 endif()
 
 set(PROJECT_SOURCES
-        main.cpp
+       main.cpp
        mainWindow.cpp
        mainWindow.h
        mainWindow.ui
@@ -33,6 +33,8 @@ set(PROJECT_SOURCES
        smbios.cpp
        infoPlatform.h
        infoPlatform.cpp
+       myProcessManager.h
+       myProcessManager.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
