@@ -47,7 +47,8 @@ private slots:
 
     void on_CustomContextMenuRequested(const QPoint &pos); // Кастомный слот для контекстного меню = QPoint(NULL, NULL)
     void insertRow(); // Вставить новую строку с помощью контекстного меню
-    void updateMySqlTableModel(QString model, QString field, QString dataStr = ""); // Обновление моделей в основном потоке
+    void updateMySqlTableModelStr(QString model, QString field, QString dataStr = ""); // Обновление моделей в основном потоке
+    void updateMySqlTableModelInt(QString model, QString field, int dataInt = -1); // Обновление моделей в основном потоке
 
 private:
     Ui::computerData *ui;

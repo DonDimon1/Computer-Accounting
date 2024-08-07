@@ -17,7 +17,8 @@ MyProcessManager::~MyProcessManager() {
     m_processes.clear();
 }
 
-void MyProcessManager::startProcess(const QString &processName, const QString &command) {
+//void MyProcessManager::startProcess(const QString &processName, const QString &command) {
+void MyProcessManager::startProcess(const QString &processName, const QString &command, const QStringList &arguments) {
 
     if (m_processes.contains(processName)) {
         qWarning() << "Process" << processName << "is already running.";
@@ -33,7 +34,10 @@ void MyProcessManager::startProcess(const QString &processName, const QString &c
 //    connect(process, &QProcess::readyReadStandardOutput, this, &MyProcessManager::onReadyReadStandardOutput);
 //    connect(process, &QProcess::readyReadStandardError, this, &MyProcessManager::onReadyReadStandardError);
 
-    process->start(command);
+    //process->start(command);
+    process->start(command, arguments);
+    //process->start("lshw", QStringList() << "-c" << "video");
+    //process->start("lshw", {"-c", "video"});
 
     qCritical() << "MyProcessManager::startProcess" << "Процесс " << processName << "Стартовал";
 }

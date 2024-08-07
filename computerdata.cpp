@@ -134,7 +134,8 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
     #endif
 
     //connect(comp, &InfoPlatform::sendUpdateMySqlTableModelSignal, this, &computerData::updateMySqlTableModel); // Слот для обновления моделей из infoLin(infoWin)
-    connect(comp, &InfoPlatform::sendUpdateMySqlTableModelSignal, this, &computerData::updateMySqlTableModel); // Слот для обновления моделей из infoLin(infoWin)
+    connect(comp, &InfoPlatform::sendUpdateMySqlTableModelSignalStr, this, &computerData::updateMySqlTableModelStr); // Слот для обновления моделей из infoLin(infoWin)
+    connect(comp, &InfoPlatform::sendUpdateMySqlTableModelSignalInt, this, &computerData::updateMySqlTableModelInt); // Слот для обновления моделей из infoLin(infoWin)
     // Определяем данные для таблицы Основная информация
     basicInfModel->setFilter(ID_Str);   // Сортируем модель по несуществующей строке
     basicInfModel->select();            // Заполняет модель данными из таблицы, которая была задана через setTable()
@@ -163,7 +164,7 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("MotherboardManufacturer")), comp->GetBoardManufacturer());  // Получаем производителя Мат.Платы
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("Videocard")), comp->GetGPUName());                          // Получаем видеокарту
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("videoMemory")), (int)comp->GetGPUMemSize());                // Получаем видеопамять
-    QString RAMStr = "";                                                                    // Строка с параметрами ОЗУ
+    QString RAMStr = "";                                                                    // Строка с параметрами ОЗУ         TODO Спрятать это всё в comp
     QString typeDDRStr = "";                                                                // Строка с типом ddr
     WORD numRAM = comp->vecMemory.size();                                                   // Кол-во плашек памяти
     for(UINT i = 0; i < numRAM; ++i){                                                       // Проходим по всем плашкам
@@ -177,17 +178,8 @@ void computerData::readPCCharacteristics(UINT ID) { // Считываем хар
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("typeDDR")), typeDDRStr);                       // Получаем тип DDR
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("TotalRAMSlots")), (int)comp->TotalRAMSlots);   // Получаем Общее кол-во слотов
     hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("CurrentRAMSlots")), (int)numRAM);              // Получаем занятое кол-во слотов
-    QString driveStr = "";                                                          // Строка с дисками     TODO Спрятать это всё в comp
-    WORD numDrive = comp->vecDrive.size();                                          // Кол-во дисков
-    WORD totalCapacityDrive = 0;                                                    // Общий объём всех дисков
-    for (UINT i = 0; i < numDrive; ++i) {                                           // Проходим по всем дискам
-        driveStr += QString::number(i + 1) + ") " + comp->vecDrive[i].Name + " ";   // Создаём строку вывода
-        driveStr += QString::number(comp->vecDrive[i].Size) + " Гб, ";
-        totalCapacityDrive += comp->vecDrive[i].Size;                               // Общий объём всех дисков
-    }
-    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("HDDSDD")), driveStr);                      // Получаем HDD & SSD
-    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("ROMcapacity")), (int)totalCapacityDrive);  // Получаем общий объём дисков QString::number(totalCapacityDrive) + " Гб"
-    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("NumberOfPhysicalDisks")), (int)numDrive);  // Получаем кол-во дисков
+    hardware->setData(hardware->index(newRowIndex, hardware->fieldIndex("HDDSDD")), comp->GetHardDriveInfo());          // Получаем HDD & SSD
+
     QString cdROM = "Нет";                                                                                          // Строка CDROM
     if(comp->GetCDROM())
         cdROM = "Есть";                                                                                             // Обработка наличия CDROM
@@ -320,7 +312,7 @@ void computerData::insertRow() {                                        // Вс�
     }
 };
 
-void computerData::updateMySqlTableModel(QString modelStr, QString fieldStr, QString dataStr){ // Слот для обновление моделей в основном потоке
+void computerData::updateMySqlTableModelStr(QString modelStr, QString fieldStr, QString dataStr){ // Слот для обновление моделей в основном потоке
     MySqlTableModel *model;
     if(modelStr == "basicInfModel")    //Узнаём с какой моделью нам нужно работать
         model = basicInfModel;
@@ -331,6 +323,18 @@ void computerData::updateMySqlTableModel(QString modelStr, QString fieldStr, QSt
         return;
     } 
     model->setData(model->index(model->rowCount() - 1, model->fieldIndex(fieldStr)), dataStr);      // Добавляем данные в модель
+}
+void computerData::updateMySqlTableModelInt(QString modelStr, QString fieldStr, int dataInt){ // Поскольку слоты не поддерживают шаблоны
+    MySqlTableModel *model;
+    if(modelStr == "basicInfModel")    //Узнаём с какой моделью нам нужно работать
+        model = basicInfModel;
+    else if(modelStr == "hardware")
+        model = hardware;
+    else{
+        qCritical() << "При обновлении модели не удалось обнаружить модель с названием: " << modelStr;
+        return;
+    }
+    model->setData(model->index(model->rowCount() - 1, model->fieldIndex(fieldStr)), dataInt);      // Добавляем данные в модель
 }
 
 void computerData::modelsHeaders() { // Функция для задания заголовков моделям

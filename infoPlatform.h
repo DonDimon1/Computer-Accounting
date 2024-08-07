@@ -33,26 +33,32 @@ public:
     virtual QString GetGPUName() = 0;               // Получить модель видеокарты
     virtual DWORD GetGPUMemSize() = 0;              // Получить объём видеопамяти видеокарты
     //Информация о жёстких дисках
-    virtual void GetHardDriveInfo() = 0;            // Получить информацию о физических дисках
+    virtual QString GetHardDriveInfo() = 0;         // Получить информацию о физических дисках
+    //virtual int GetHardDriveCount() = 0;            // Получаем кол-во дисков
     //Информация о дисководе
     virtual bool GetCDROM() = 0;
     //Информация о мониторах
     //void GetMonitor();                            // Получить информацию о мониторе
 
     //ОЗУ
-    WORD TotalRAMSlots{};                       // Общее кол-во разъёмов для памяти
-    struct infoMemory;                          // Структура информации о конкретной плашки памяти.
-    std::vector<infoMemory> vecMemory{};        // Информация обо всех плашках ОЗУ
+    WORD TotalRAMSlots{};                           // Общее кол-во разъёмов для памяти
+    struct infoMemory;                              // Структура информации о конкретной плашки памяти.
+    std::vector<infoMemory> vecMemory{};            // Информация обо всех плашках ОЗУ
     //Disk
-    struct infoHardDrive;                       // Структура информации о конкретном жёстком диске(или ссд).
-    std::vector<infoHardDrive> vecDrive{};      // Информация обо всех физических дисках
+    struct infoHardDrive;                           // Структура информации о конкретном жёстком диске(или ссд).
+    std::vector<infoHardDrive> vecDrive{};          // Информация обо всех физических дисках
+    //QString strHardDrives{};                        // Информация обо всех физических дисках в виде одной строки
     //Monitor
-    struct infoMonitors;                        // Структура Информации о конкретном мониторе
-    //std::vector<infoMonitors> vecMonitors;    // Информация обо всех мониторах
-    MyProcessManager *processManager{};         // Менеджер процессов QProcess
+    struct infoMonitors;                            // Структура Информации о конкретном мониторе
+    //std::vector<infoMonitors> vecMonitors;        // Информация обо всех мониторах
+    MyProcessManager *processManager{};             // Менеджер процессов QProcess
+
+private:
+    virtual void CreateCommonHardDriveString() = 0;             // Создание общей строки HardDrive и отправка сигнала
 
 signals:
-    void sendUpdateMySqlTableModelSignal(QString model, QString field, QString dataStr = "");                   // Отправка сигнала для обновления таблиц MySqlTableModel на форме computerdata
+    void sendUpdateMySqlTableModelSignalStr(QString model, QString field, QString dataStr = "");                   // Отправка сигнала для обновления таблиц MySqlTableModel на форме computerdata
+    void sendUpdateMySqlTableModelSignalInt(QString model, QString field, int dataInt = -1);                       // Отправка сигнала для обновления таблиц MySqlTableModel на форме computerdata
 
 public slots:
     virtual void distributionSignals(const QString &processName, const QString &output) = 0;                    // Основной слот для распределения сигналов по корректным методам

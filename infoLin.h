@@ -31,13 +31,15 @@ public:
     QString GetGPUName() override;                  // Получить модель видеокарты
     DWORD GetGPUMemSize() override;                 // Получить объём видеопамяти видеокарты
     //Информация о жёстких дисках
-    void GetHardDriveInfo() override;               // Получить информацию о физических дисках
+    QString GetHardDriveInfo() override;            // Получить информацию о физических дисках
     //Информация о дисководе
     bool GetCDROM() override;
 
 
     // Обработка процессов QProcess
-    void ProcessingDataCPUName(const QString &output); // Обработка результата процесса ProcessGetGPUName
+    void ProcessingDataGPUName(const QString &output);      // Обработка результата процесса ProcessGetGPUName
+    void ProcessingGetHardDrive(const QString &output);     // Обработка результата процесса ProcessGetHardDriveInfo
+    void Processinghdparm_sd(const QString &processName, const QString &output);        // Обработка результата процесса hdparm sd
     //ОЗУ
     //WORD TotalRAMSlots;                                 // Общее кол-во разъёмов для памяти
     //std::vector<InfoPlatform::infoMemory> vecMemory;    // Информация обо всех плашках ОЗУ
@@ -46,14 +48,12 @@ public:
     // //Monitor
     // std::vector<infoMonitors> vecMonitors;           // Информация обо всех плашках мониторах
 
-private slots:
-    //void readProcessOutput();
-    //void processGetGPUNameFinished(int exitCode, QProcess::ExitStatus exitStatus);
 public slots:
     void distributionSignals(const QString &processName, const QString &output) override;               // Основной слот для распределения сигналов по корректным методам
     void distributionErrors(const QString &processName, const QProcess::ProcessError &error) override;  // Основной слот для обработки ошибок процессов
 private:
     QProcess *process;
+    void CreateCommonHardDriveString() override;             // Создание общей строки HardDrive и отправка сигнала
 };
 
 #endif

@@ -13,7 +13,8 @@ public:
     explicit MyProcessManager(QObject *parent = nullptr);
     ~MyProcessManager();
 
-    void startProcess(const QString &processName, const QString &command);                              // Старт процесса
+    //void startProcess(const QString &processName, const QString &command);                              // Старт процесса
+    void startProcess(const QString &processName, const QString &command, const QStringList &arguments);                              // Старт процесса
     void cleanUpProcess(const QString &processName);                                                    // Удаление процесса
 
 signals:
